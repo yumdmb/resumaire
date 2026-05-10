@@ -4,3 +4,14 @@
 .github/
 .kiro/
 .opencode/
+frontend/node_modules/
+frontend/dist/
+backend/bin/
+backend/obj/
+*.tsbuildinfo
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+backend/.env
+backend/.env.local
+backend/.env.*.local

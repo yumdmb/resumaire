@@ -1,0 +1,6 @@
+@Resumaire.Api_HostAddress = https://localhost:7263
+
+GET {{Resumaire.Api_HostAddress}}/
+Accept: application/json
+
+###

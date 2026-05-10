@@ -1,9 +1,9 @@
 ## 1. Project Setup
 
-- [ ] 1.1 Create `frontend/` React project with TypeScript, routing, linting, and test tooling
-- [ ] 1.2 Create `backend/` ASP.NET Core API project targeting the selected stable .NET version
-- [ ] 1.3 Add root-level documentation for running frontend, backend, database, and tests locally
-- [ ] 1.4 Configure environment variable templates for frontend API URL and backend secrets
+- [x] 1.1 Create `frontend/` React project with TypeScript, routing, linting, and test tooling
+- [x] 1.2 Create `backend/` ASP.NET Core API project targeting the selected stable .NET version
+- [x] 1.3 Add root-level documentation for running frontend, backend, database, and tests locally
+- [x] 1.4 Configure environment variable templates for frontend API URL and backend secrets
 
 ## 2. Backend Foundation
 
