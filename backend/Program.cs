@@ -1,26 +1,52 @@
+using Resumaire.Api.Configuration;
+using Resumaire.Api.Endpoints;
+using Microsoft.AspNetCore.WebUtilities;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
+builder.Services
+    .AddResumaireOptions(builder.Configuration)
+    .AddResumaireDatabase(builder.Configuration)
+    .AddResumaireIdentity()
+    .AddResumaireApiServices(builder.Configuration);
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseExceptionHandler();
+app.UseStatusCodePages(async statusCodeContext =>
+{
+    var httpContext = statusCodeContext.HttpContext;
+    var problemDetailsService = httpContext.RequestServices.GetRequiredService<IProblemDetailsService>();
+
+    await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
+    {
+        HttpContext = httpContext,
+        ProblemDetails =
+        {
+            Status = httpContext.Response.StatusCode,
+            Title = ReasonPhrases.GetReasonPhrase(httpContext.Response.StatusCode)
+        }
+    });
+});
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+else
+{
+    app.UseHsts();
+}
 
 app.UseHttpsRedirection();
 
-app.MapGet("/", (IHostEnvironment environment) =>
-    Results.Ok(new ApiStatus(
-        Name: "Resumaire API",
-        Environment: environment.EnvironmentName,
-        OpenApiDocument: environment.IsDevelopment() ? "/openapi/v1.json" : null)))
-    .WithName("GetApiStatus");
+app.UseCors(CorsOptions.SectionName);
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapResumaireEndpoints();
 
 app.Run();
 
-internal sealed record ApiStatus(string Name, string Environment, string? OpenApiDocument);
+public partial class Program;

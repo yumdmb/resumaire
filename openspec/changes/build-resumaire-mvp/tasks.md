@@ -7,19 +7,19 @@
 
 ## 2. Backend Foundation
 
-- [ ] 2.1 Configure ASP.NET Core services, middleware, OpenAPI, ProblemDetails, CORS, HTTPS redirection, and health checks
-- [ ] 2.2 Add PostgreSQL and EF Core configuration with initial migration support
-- [ ] 2.3 Add user authentication and authorization for protected API endpoints
-- [ ] 2.4 Add common API response, validation, and authenticated user helpers
-- [ ] 2.5 Add backend integration test infrastructure with test database support
+- [x] 2.1 Configure ASP.NET Core services, middleware, OpenAPI, ProblemDetails, CORS, HTTPS redirection, and health checks
+- [x] 2.2 Add PostgreSQL and EF Core configuration with initial migration support
+- [x] 2.3 Add user authentication and authorization for protected API endpoints
+- [x] 2.4 Add common API response, validation, and authenticated user helpers
+- [x] 2.5 Add backend integration test infrastructure with test database support
 
 ## 3. Data Model
 
-- [ ] 3.1 Create user-owned job entity with status enum and resume version reference fields
-- [ ] 3.2 Create base resume entity with versioned structured JSON content
-- [ ] 3.3 Create tailored resume entity linked to user, job, and source base resume snapshot
-- [ ] 3.4 Create optional tailoring suggestion persistence for AI notes, review state, and accepted changes
-- [ ] 3.5 Add EF Core migrations and ownership indexes for user-scoped queries
+- [x] 3.1 Create user-owned job entity with status enum and resume version reference fields
+- [x] 3.2 Create base resume entity with versioned structured JSON content
+- [x] 3.3 Create tailored resume entity linked to user, job, and source base resume snapshot
+- [x] 3.4 Create optional tailoring suggestion persistence for AI notes, review state, and accepted changes
+- [x] 3.5 Add EF Core migrations and ownership indexes for user-scoped queries
 
 ## 4. Job Tracking
 
