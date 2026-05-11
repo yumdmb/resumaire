@@ -7,11 +7,11 @@
 
 ## 2. Backend Foundation
 
-- [ ] 2.1 Configure ASP.NET Core services, middleware, OpenAPI, ProblemDetails, CORS, HTTPS redirection, and health checks
-- [ ] 2.2 Add PostgreSQL and EF Core configuration with initial migration support
-- [ ] 2.3 Add user authentication and authorization for protected API endpoints
-- [ ] 2.4 Add common API response, validation, and authenticated user helpers
-- [ ] 2.5 Add backend integration test infrastructure with test database support
+- [x] 2.1 Configure ASP.NET Core services, middleware, OpenAPI, ProblemDetails, CORS, HTTPS redirection, and health checks
+- [x] 2.2 Add PostgreSQL and EF Core configuration with initial migration support
+- [x] 2.3 Add user authentication and authorization for protected API endpoints
+- [x] 2.4 Add common API response, validation, and authenticated user helpers
+- [x] 2.5 Add backend integration test infrastructure with test database support
 
 ## 3. Data Model
 

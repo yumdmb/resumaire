@@ -67,10 +67,12 @@ The ASP.NET Core launch profiles expose:
 - `http://localhost:5194`
 
 In development, OpenAPI is available at `https://localhost:7263/openapi/v1.json`.
+Health checks are available at `https://localhost:7263/health`.
+Identity API endpoints are grouped under `/api/auth`, and protected API endpoints require authentication.
 
 ### Database
 
-The application does not consume PostgreSQL until task `2.2`, but you can start a compatible local database now:
+The backend uses PostgreSQL through EF Core. You can start a compatible local database with:
 
 ```powershell
 docker run --name resumaire-postgres `
@@ -82,6 +84,12 @@ docker run --name resumaire-postgres `
 ```
 
 Use the matching connection string from `backend/.env.example` or development user secrets.
+
+Apply migrations with:
+
+```powershell
+dotnet ef database update --project backend --startup-project backend
+```
 
 ## Quality Checks
 
@@ -96,10 +104,10 @@ npm run build
 
 ### Backend
 
-There is not yet a dedicated backend test project. For the current setup phase, verify the backend with:
+Run the backend build and integration tests with:
 
 ```powershell
-dotnet build Resumaire.slnx
+dotnet test Resumaire.slnx
 ```
 
-Backend integration tests are scheduled in task `2.5`.
+Database-backed integration tests can use the PostgreSQL Testcontainers fixture in `tests/Resumaire.Api.Tests`.
