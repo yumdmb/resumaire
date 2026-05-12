@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { ResumeContent, TailoringAnalysis, TailoringSuggestionBatch } from '../../lib/types'
+import { applyAcceptedSuggestions } from './applyAcceptedSuggestions'
 import { SuggestionCard } from './SuggestionCard'
 import type { SuggestionDecision, SuggestionState } from './types'
 
@@ -207,7 +208,13 @@ export function AiReviewPanel({
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => onSave(baseContent, suggestions, versionName)}
+            onClick={() =>
+              onSave(
+                applyAcceptedSuggestions(baseContent, suggestions),
+                suggestions,
+                versionName,
+              )
+            }
           >
             Save version
           </button>

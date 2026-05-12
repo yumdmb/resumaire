@@ -59,7 +59,7 @@
 - [x] 7.5 Implement backend endpoints for generating, saving, and listing tailored resume versions
 - [x] 7.6 Build frontend tailoring review UI with original content, suggested content, rationale, and accept/reject/edit controls
 - [x] 7.7 Build manual tailored resume editing without requiring AI suggestions
-- [ ] 7.8 Add tests for unsupported keywords, accepted suggestions, rejected suggestions, manual edits, and saved versions
+- [x] 7.8 Add tests for unsupported keywords, accepted suggestions, rejected suggestions, manual edits, and saved versions
 
 ## 8. Resume Preview And PDF Export
 

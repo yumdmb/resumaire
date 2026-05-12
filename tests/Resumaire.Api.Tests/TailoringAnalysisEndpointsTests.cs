@@ -102,7 +102,7 @@ public sealed class TailoringAnalysisEndpointsTests
     }
 
     [Fact]
-    public async Task GenerateSuggestionsAndSaveVersion_ForOwner_PersistsSuggestionAndVersion()
+    public async Task GenerateSuggestionsAndSaveVersion_ForOwner_PersistsSuggestionReviewStatesAndVersion()
     {
         await using var factory = await CreateMigratedFactoryAsync();
         await ResetDatabaseAsync(factory);
@@ -118,6 +118,13 @@ public sealed class TailoringAnalysisEndpointsTests
                         "Built a React dashboard for API workflow review.",
                         "The job emphasizes React, and this existing bullet already supports that keyword.",
                         [ "Experience[0].Bullets[0]" ],
+                        "No new experience was added."),
+                    new AiTailoringSuggestionDraft(
+                        "Summary",
+                        "Builds reliable APIs with PostgreSQL-backed services.",
+                        "Builds reliable APIs with PostgreSQL-backed services.",
+                        "The job emphasizes APIs, and the summary already supports that keyword.",
+                        [ "Summary" ],
                         "No new experience was added.")
                 ],
                 [
@@ -134,17 +141,19 @@ public sealed class TailoringAnalysisEndpointsTests
         Assert.Equal(HttpStatusCode.OK, suggestionsResponse.StatusCode);
         var suggestionsPayload = await ReadJsonAsync(suggestionsResponse);
         var suggestions = suggestionsPayload.GetProperty("data").GetProperty("suggestions").EnumerateArray().ToArray();
-        var suggestion = Assert.Single(suggestions);
-        var suggestionId = suggestion.GetProperty("id").GetGuid();
-        Assert.Equal("Pending", suggestion.GetProperty("reviewState").GetString());
-        Assert.Equal("Experience", suggestion.GetProperty("targetSection").GetString());
+        Assert.Equal(2, suggestions.Length);
+        var acceptedSuggestionId = suggestions[0].GetProperty("id").GetGuid();
+        var rejectedSuggestionId = suggestions[1].GetProperty("id").GetGuid();
+        Assert.All(suggestions, suggestion => Assert.Equal("Pending", suggestion.GetProperty("reviewState").GetString()));
+        Assert.Equal("Experience", suggestions[0].GetProperty("targetSection").GetString());
+        Assert.Equal("Summary", suggestions[1].GetProperty("targetSection").GetString());
 
         var saveResponse = await client.PostAsJsonAsync($"/api/jobs/{jobId}/tailoring/versions", new
         {
             Name = "Example Co tailored resume",
             Content = CreateResumeContent(),
-            AcceptedSuggestionIds = new[] { suggestionId },
-            RejectedSuggestionIds = Array.Empty<Guid>()
+            AcceptedSuggestionIds = new[] { acceptedSuggestionId },
+            RejectedSuggestionIds = new[] { rejectedSuggestionId }
         });
 
         Assert.Equal(HttpStatusCode.Created, saveResponse.StatusCode);
@@ -165,11 +174,61 @@ public sealed class TailoringAnalysisEndpointsTests
 
         await using var scope = factory.Services.CreateAsyncScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        var storedSuggestion = await dbContext.TailoringSuggestions.SingleAsync(value => value.Id == suggestionId);
+        var storedAcceptedSuggestion = await dbContext.TailoringSuggestions.SingleAsync(value => value.Id == acceptedSuggestionId);
+        var storedRejectedSuggestion = await dbContext.TailoringSuggestions.SingleAsync(value => value.Id == rejectedSuggestionId);
         var storedJob = await dbContext.Jobs.SingleAsync(value => value.Id == jobId);
-        Assert.Equal(TailoringSuggestionReviewState.Accepted, storedSuggestion.ReviewState);
-        Assert.Equal(versionId, storedSuggestion.TailoredResumeId);
+        Assert.Equal(TailoringSuggestionReviewState.Accepted, storedAcceptedSuggestion.ReviewState);
+        Assert.Equal(versionId, storedAcceptedSuggestion.TailoredResumeId);
+        Assert.NotNull(storedAcceptedSuggestion.AcceptedContentJson);
+        Assert.Equal(TailoringSuggestionReviewState.Rejected, storedRejectedSuggestion.ReviewState);
+        Assert.Equal(versionId, storedRejectedSuggestion.TailoredResumeId);
+        Assert.Null(storedRejectedSuggestion.AcceptedContentJson);
         Assert.Equal(versionId, storedJob.SelectedTailoredResumeId);
+    }
+
+    [Fact]
+    public async Task SaveVersion_WithoutSuggestionIds_PersistsManualEditAndListsSavedVersion()
+    {
+        await using var factory = await CreateMigratedFactoryAsync();
+        await ResetDatabaseAsync(factory);
+        var baseResumeId = await SeedBaseResumeAsync(factory, OwnerUserId);
+        var jobId = await SeedJobAsync(factory, OwnerUserId, baseResumeId);
+        var manualContent = CreateResumeContent() with
+        {
+            Summary = "Manual tailored summary for the role."
+        };
+
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
+
+        var saveResponse = await client.PostAsJsonAsync($"/api/jobs/{jobId}/tailoring/versions", new
+        {
+            Name = "Manual version",
+            Content = manualContent,
+            AcceptedSuggestionIds = Array.Empty<Guid>(),
+            RejectedSuggestionIds = Array.Empty<Guid>()
+        });
+
+        Assert.Equal(HttpStatusCode.Created, saveResponse.StatusCode);
+        var savedPayload = await ReadJsonAsync(saveResponse);
+        var savedVersion = savedPayload.GetProperty("data");
+        var versionId = savedVersion.GetProperty("id").GetGuid();
+        Assert.Equal("Manual tailored summary for the role.", savedVersion.GetProperty("content").GetProperty("summary").GetString());
+
+        var listResponse = await client.GetAsync($"/api/jobs/{jobId}/tailoring/versions");
+
+        Assert.Equal(HttpStatusCode.OK, listResponse.StatusCode);
+        var listPayload = await ReadJsonAsync(listResponse);
+        var listedVersion = Assert.Single(listPayload.GetProperty("data").EnumerateArray());
+        Assert.Equal(versionId, listedVersion.GetProperty("id").GetGuid());
+        Assert.Equal("Manual version", listedVersion.GetProperty("name").GetString());
+        Assert.Equal("Manual tailored summary for the role.", listedVersion.GetProperty("content").GetProperty("summary").GetString());
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var storedJob = await dbContext.Jobs.SingleAsync(value => value.Id == jobId);
+        Assert.Equal(versionId, storedJob.SelectedTailoredResumeId);
+        Assert.False(await dbContext.TailoringSuggestions.AnyAsync(value => value.JobId == jobId));
     }
 
     [Fact]

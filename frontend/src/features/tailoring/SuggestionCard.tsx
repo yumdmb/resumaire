@@ -109,7 +109,6 @@ export function SuggestionCard({ state, onDecision, onEditContent }: Props) {
               value={editedContent}
               onChange={(e) => onEditContent(e.target.value)}
               rows={3}
-              // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
             />
           ) : (
