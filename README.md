@@ -1,78 +1,65 @@
 # Resumaire
 
-Resumaire is being built as a split application:
+Resumaire is a split application:
 
 - `frontend/`: React 19 + TypeScript + Vite SPA
 - `backend/`: ASP.NET Core 10 Web API
+- `tests/`: backend integration tests
+- `openspec/`: project specs, design, and task tracking
 
-As of May 10, 2026, the backend targets `.NET 10` because it is the current stable LTS release.
+The app uses PostgreSQL for local development and ASP.NET Identity for authentication.
 
 ## Prerequisites
 
 - Node.js 22+
 - npm 11+
 - .NET SDK 10.0.x
-- Docker Desktop or another local PostgreSQL option
+- Docker Desktop, or another PostgreSQL 17-compatible local database
 
-## Repo Layout
-
-- `frontend/` contains the SPA shell, routing, linting, and Vitest setup.
-- `backend/` contains the ASP.NET Core API host and development OpenAPI endpoint.
-- `openspec/` contains the change proposal, specs, design, and task tracking.
-- `Resumaire.slnx` keeps the backend project in a solution for CLI workflows.
-
-## Environment Setup
-
-### Frontend
-
-1. Copy `frontend/.env.example` to `frontend/.env.local`.
-2. Set `VITE_API_BASE_URL` to the backend origin you want the SPA to call.
-
-### Backend
-
-`backend/.env.example` documents the environment variable names the API will expect as more features land. ASP.NET Core already reads environment variables, and the project is configured with a `UserSecretsId` for development secrets.
-
-Recommended development flow:
+If `dotnet ef` is not installed:
 
 ```powershell
-cd backend
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=resumaire;Username=postgres;Password=postgres"
-dotnet user-secrets set "OpenAI:ApiKey" "<your-key>"
+dotnet tool install --global dotnet-ef
 ```
 
-For non-secret local configuration you can also set variables in your shell before running `dotnet run`.
+## First-Time Setup
 
-## Run Locally
+Run this section once on a new machine or after cloning the repo. After this is done, use the shorter "Start Development Next Time" section.
 
-### Frontend
+### 1. Install frontend dependencies
 
 ```powershell
 cd frontend
 npm install
-npm run dev
+cd ..
 ```
 
-The Vite dev server runs on `http://localhost:5173` by default.
+### 2. Configure frontend API URL
 
-### Backend
+Copy the frontend env example:
 
 ```powershell
-dotnet restore Resumaire.slnx
-dotnet run --project backend
+Copy-Item frontend/.env.example frontend/.env.local
 ```
 
-The ASP.NET Core launch profiles expose:
+The default local API URL is:
 
-- `https://localhost:7263`
-- `http://localhost:5194`
+```env
+VITE_API_BASE_URL=http://localhost:5194
+```
 
-In development, OpenAPI is available at `https://localhost:7263/openapi/v1.json`.
-Health checks are available at `https://localhost:7263/health`.
-Identity API endpoints are grouped under `/api/auth`, and protected API endpoints require authentication.
+### 3. Configure backend secrets
 
-### Database
+```powershell
+dotnet user-secrets set --project backend "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=resumaire;Username=postgres;Password=postgres"
+dotnet user-secrets set --project backend "OpenAI:ApiKey" "<your-key>"
+```
 
-The backend uses PostgreSQL through EF Core. You can start a compatible local database with:
+`OpenAI:ApiKey` is only needed once AI features are used.
+
+### 4. Start PostgreSQL
+
+If the `resumaire-postgres` container does not exist yet:
 
 ```powershell
 docker run --name resumaire-postgres `
@@ -83,31 +70,139 @@ docker run --name resumaire-postgres `
   -d postgres:17
 ```
 
-Use the matching connection string from `backend/.env.example` or development user secrets.
+If the container already exists but is stopped:
 
-Apply migrations with:
+```powershell
+docker start resumaire-postgres
+```
+
+Verify the port is open:
+
+```powershell
+Test-NetConnection localhost -Port 5432
+```
+
+### 5. Apply backend migrations
 
 ```powershell
 dotnet ef database update --project backend --startup-project backend
 ```
 
-## Quality Checks
+## Start Development Next Time
+
+Run this section whenever you come back to work on the app after first-time setup is complete.
+
+### 1. Start PostgreSQL
+
+If the database container is already running, this command may say it is already started.
+
+```powershell
+docker start resumaire-postgres
+```
+
+### 2. Start the app
+
+Use two terminals.
+
+#### Terminal 1: Backend API
+
+```powershell
+dotnet run --project backend
+```
+
+#### Terminal 2: Frontend SPA
+
+```powershell
+cd frontend
+npm run dev
+```
+
+Then open:
+
+- `http://localhost:5173`
+
+## Local URLs
+
+### Backend API
+
+The backend runs on:
+
+- `http://localhost:5194`
+- `https://localhost:7263`
+
+Local endpoints:
+
+- API status: `http://localhost:5194/`
+- Health check: `http://localhost:5194/health`
+- OpenAPI: `http://localhost:5194/openapi/v1.json`
+- Auth endpoints: `http://localhost:5194/api/auth/*`
+
+If you run only the HTTP profile and see `Failed to determine the https port for redirect`, it is not the database/login failure. The frontend is configured to use `http://localhost:5194` locally.
+
+### Frontend SPA
+
+The frontend runs on:
+
+- `http://localhost:5173`
+
+Open `http://localhost:5173` in the browser.
+
+## Common Development Commands
 
 ### Frontend
 
 ```powershell
 cd frontend
-npm run lint
-npm run test
-npm run build
+npm run dev        # start Vite dev server
+npm test           # run Vitest once
+npm run test:watch # run Vitest in watch mode
+npm run lint       # run ESLint
+npm run build      # type-check and build production assets
+npm run preview    # preview the built frontend
 ```
 
 ### Backend
 
-Run the backend build and integration tests with:
-
 ```powershell
+dotnet restore Resumaire.slnx
+dotnet build Resumaire.slnx
+dotnet run --project backend
 dotnet test Resumaire.slnx
+dotnet ef database update --project backend --startup-project backend
 ```
 
-Database-backed integration tests can use the PostgreSQL Testcontainers fixture in `tests/Resumaire.Api.Tests`.
+## Troubleshooting
+
+### Sign-in fails with `Failed to connect to 127.0.0.1:5432`
+
+PostgreSQL is not running on the port configured in backend user secrets. Start the local database:
+
+```powershell
+docker start resumaire-postgres
+```
+
+Then verify:
+
+```powershell
+Test-NetConnection localhost -Port 5432
+```
+
+If the container does not exist, create it with the command in the PostgreSQL setup section.
+
+### Database schema errors after starting Postgres
+
+Apply migrations:
+
+```powershell
+dotnet ef database update --project backend --startup-project backend
+```
+
+### Frontend cannot reach the backend
+
+Confirm the backend is running on `http://localhost:5194`, then check `frontend/.env.local`:
+
+```env
+VITE_API_BASE_URL=http://localhost:5194
+```
+
+Restart `npm run dev` after changing `.env.local`.

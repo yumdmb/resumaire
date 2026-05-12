@@ -1,4 +1,5 @@
-import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { ProtectedRoute } from './components/ProtectedRoute'
 import { useAuth } from './lib/auth'
 import { DashboardPage } from './pages/DashboardPage'
 import { JobDetailPage } from './pages/JobDetailPage'
@@ -99,6 +100,7 @@ function AppShell() {
 /** Shows landing for anonymous users, dashboard shell for authenticated. */
 function RootRoute() {
   const { user, isLoading } = useAuth()
+  const location = useLocation()
 
   if (isLoading) {
     return (
@@ -109,10 +111,22 @@ function RootRoute() {
   }
 
   if (!user) {
-    return <LandingPage />
+    if (location.pathname === '/') {
+      return <LandingPage />
+    }
+
+    return (
+      <ProtectedRoute>
+        <AppShell />
+      </ProtectedRoute>
+    )
   }
 
-  return <AppShell />
+  return (
+    <ProtectedRoute>
+      <AppShell />
+    </ProtectedRoute>
+  )
 }
 
 function App() {
@@ -120,10 +134,7 @@ function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
-      <Route
-        path="/*"
-        element={<RootRoute />}
-      />
+      <Route path="/*" element={<RootRoute />} />
     </Routes>
   )
 }

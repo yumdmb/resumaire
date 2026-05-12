@@ -48,7 +48,7 @@
 - [x] 6.6 Update `App.tsx` routing: wrap protected routes with `ProtectedRoute`, add `/login`, `/register` routes, conditionally show landing page or dashboard at `/`
 - [x] 6.7 Remove per-page `hasAccessToken()` checks and `unauthorized` state handling from DashboardPage, JobDetailPage, JobFormPage, and ResumeBuilderPage
 - [x] 6.8 Add logout action to the app navigation header
-- [ ] 6.9 Add tests for login flow, register flow, 401 redirect, protected route guard, and inline validation
+- [x] 6.9 Add tests for login flow, register flow, 401 redirect, protected route guard, and inline validation
 
 ## 7. Tailoring Workflow
 

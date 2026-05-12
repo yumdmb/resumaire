@@ -4,9 +4,11 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import type { ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { frontendEnv } from './env'
 import { AuthError } from './auth-error'
 
@@ -84,13 +86,24 @@ function readAuthToken(payload: unknown): string {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate()
+  const navigateRef = useRef(navigate)
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(() => !!getStoredToken())
 
-  const logout = useCallback(() => {
+  useEffect(() => {
+    navigateRef.current = navigate
+  }, [navigate])
+
+  const endSession = useCallback(() => {
     clearToken()
     setUser(null)
+    navigateRef.current('/login', { replace: true })
   }, [])
+
+  const logout = useCallback(() => {
+    endSession()
+  }, [endSession])
 
   // On mount, validate existing token
   useEffect(() => {
@@ -108,16 +121,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         })
         if (cancelled) return
         if (!res.ok) {
-          clearToken()
-          setUser(null)
+          endSession()
         } else {
           const envelope = await res.json()
           setUser({ email: envelope.data?.email ?? '' })
         }
       } catch {
         if (cancelled) return
-        clearToken()
-        setUser(null)
+        endSession()
       } finally {
         if (!cancelled) setIsLoading(false)
       }
@@ -126,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [endSession])
 
   // Intercept 401 responses globally via a patched fetch wrapper
   useEffect(() => {
@@ -135,8 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const patchedFetch: typeof fetch = async (input, init) => {
       const response = await originalFetch(input, init)
       if (response.status === 401) {
-        clearToken()
-        setUser(null)
+        endSession()
       }
       return response
     }
@@ -145,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       window.fetch = originalFetch
     }
-  }, [])
+  }, [endSession])
 
   const login = useCallback(async (email: string, password: string) => {
     const res = await fetch(`${frontendEnv.apiBaseUrl}/api/auth/login`, {
