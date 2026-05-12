@@ -28,7 +28,7 @@
 - [x] 4.3 Implement backend job detail endpoint with saved tailored resume versions
 - [x] 4.4 Build frontend dashboard with status filters
 - [x] 4.5 Build frontend add/edit job form and job detail page
-- [ ] 4.6 Add tests for job ownership, CRUD behavior, status filtering, and invalid statuses
+- [x] 4.6 Add tests for job ownership, CRUD behavior, status filtering, and invalid statuses
 
 ## 5. Resume Profile
 

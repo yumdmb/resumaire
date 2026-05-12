@@ -61,6 +61,26 @@ public static class JobsEndpoints
             query = query.Where(job => job.Status == statusFilter.Value);
         }
 
+        if (dbContext.Database.IsSqlite())
+        {
+            var sqliteJobs = await query
+                .Select(job => new JobSummaryResponse(
+                    job.Id,
+                    job.Company,
+                    job.Title,
+                    job.Link,
+                    job.Status.ToString(),
+                    job.DateApplied,
+                    job.Notes,
+                    job.SelectedBaseResumeId,
+                    job.SelectedTailoredResumeId,
+                    job.CreatedAt,
+                    job.UpdatedAt))
+                .ToListAsync(cancellationToken);
+
+            return ApiResponses.Ok(sqliteJobs.OrderByDescending(job => job.UpdatedAt).ToList());
+        }
+
         var jobs = await query
             .OrderByDescending(job => job.UpdatedAt)
             .Select(job => new JobSummaryResponse(

@@ -25,13 +25,23 @@ public static class ServiceCollectionExtensions
         IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var provider = configuration.GetValue<string>("Database:Provider");
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             throw new InvalidOperationException("ConnectionStrings:DefaultConnection is required.");
         }
 
-        services.AddDbContext<ApplicationDbContext>(options => options.UseNpgsql(connectionString));
+        services.AddDbContext<ApplicationDbContext>(options =>
+        {
+            if (string.Equals(provider, "Sqlite", StringComparison.OrdinalIgnoreCase))
+            {
+                options.UseSqlite(connectionString);
+                return;
+            }
+
+            options.UseNpgsql(connectionString);
+        });
 
         return services;
     }
