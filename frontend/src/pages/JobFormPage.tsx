@@ -1,6 +1,6 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
-import { ApiError, hasAccessToken, jobsApi } from '../lib/api'
+import { ApiError, jobsApi } from '../lib/api'
 import {
   JOB_STATUSES,
   type FieldErrors,
@@ -23,7 +23,6 @@ const EMPTY_VALUES: JobFormValues = {
 type LoadState =
   | { status: 'loading' }
   | { status: 'ready' }
-  | { status: 'unauthorized' }
   | { status: 'not_found' }
   | { status: 'error'; message: string }
 
@@ -36,16 +35,13 @@ export function JobFormPage({ mode }: { mode: Mode }) {
   const [errors, setErrors] = useState<FieldErrors>({})
   const [isSaving, setIsSaving] = useState(false)
   const [reloadToken, setReloadToken] = useState(0)
-  const [loadState, setLoadState] = useState<LoadState>(() => {
-    if (!isEdit) return { status: 'ready' }
-    return hasAccessToken() ? { status: 'loading' } : { status: 'unauthorized' }
-  })
+  const [loadState, setLoadState] = useState<LoadState>(() =>
+    isEdit ? { status: 'loading' } : { status: 'ready' },
+  )
 
   // Load existing job data when editing
   useEffect(() => {
     if (!isEdit) return
-    // Skip fetch when not authenticated — initial state already reflects this
-    if (loadState.status === 'unauthorized') return
     let cancelled = false
     ;(async () => {
       try {
@@ -68,10 +64,6 @@ export function JobFormPage({ mode }: { mode: Mode }) {
       } catch (error) {
         if (cancelled) return
         if (error instanceof ApiError) {
-          if (error.isUnauthorized) {
-            setLoadState({ status: 'unauthorized' })
-            return
-          }
           if (error.isNotFound) {
             setLoadState({ status: 'not_found' })
             return
@@ -89,14 +81,11 @@ export function JobFormPage({ mode }: { mode: Mode }) {
     return () => {
       cancelled = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isEdit, jobId, reloadToken])
 
   function handleRetry() {
-    if (hasAccessToken()) {
-      setLoadState({ status: 'loading' })
-      setReloadToken((t) => t + 1)
-    }
+    setLoadState({ status: 'loading' })
+    setReloadToken((t) => t + 1)
   }
 
   const heading = isEdit ? 'Edit job' : 'Add job'
@@ -132,10 +121,6 @@ export function JobFormPage({ mode }: { mode: Mode }) {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault()
-    if (!hasAccessToken()) {
-      setLoadState({ status: 'unauthorized' })
-      return
-    }
     setIsSaving(true)
     setErrors({})
     try {
@@ -145,10 +130,6 @@ export function JobFormPage({ mode }: { mode: Mode }) {
       navigate(`/jobs/${saved.id}`, { replace: true })
     } catch (error) {
       if (error instanceof ApiError) {
-        if (error.isUnauthorized) {
-          setLoadState({ status: 'unauthorized' })
-          return
-        }
         setErrors({
           ...error.fieldErrors,
           _general: error.fieldErrors._general ?? [error.message],
@@ -177,21 +158,6 @@ export function JobFormPage({ mode }: { mode: Mode }) {
             className="skeleton skeleton-line"
             style={{ width: '80%', marginTop: 12 }}
           />
-        </div>
-      </div>
-    )
-  }
-
-  if (loadState.status === 'unauthorized') {
-    return (
-      <div className="page">
-        <FormHeader heading={heading} backHref={backHref} backLabel={backLabel} />
-        <div className="empty-state">
-          <p className="empty-state-title">Sign in required</p>
-          <p className="empty-state-body">
-            Authentication is not wired into the frontend yet. Jobs are tied to
-            the signed-in user.
-          </p>
         </div>
       </div>
     )

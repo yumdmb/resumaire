@@ -1,6 +1,6 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { ApiError, hasAccessToken, jobsApi } from '../lib/api'
+import { ApiError, jobsApi } from '../lib/api'
 import { formatLongDate } from '../lib/format'
 import type { JobDetail, JobStatus } from '../lib/types'
 
@@ -15,7 +15,6 @@ const BADGE_CLASS: Record<JobStatus, string> = {
 type LoadState =
   | { status: 'loading' }
   | { status: 'ready'; job: JobDetail }
-  | { status: 'unauthorized' }
   | { status: 'not_found' }
   | { status: 'error'; message: string }
 
@@ -23,14 +22,10 @@ export function JobDetailPage() {
   const { jobId = '' } = useParams()
   const navigate = useNavigate()
   const [reloadToken, setReloadToken] = useState(0)
-  const [state, setState] = useState<LoadState>(() =>
-    hasAccessToken() ? { status: 'loading' } : { status: 'unauthorized' },
-  )
+  const [state, setState] = useState<LoadState>({ status: 'loading' })
   const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
-    // Skip fetch when not authenticated — initial state already reflects this
-    if (state.status === 'unauthorized') return
     let cancelled = false
     ;(async () => {
       try {
@@ -44,10 +39,6 @@ export function JobDetailPage() {
       } catch (error) {
         if (cancelled) return
         if (error instanceof ApiError) {
-          if (error.isUnauthorized) {
-            setState({ status: 'unauthorized' })
-            return
-          }
           if (error.isNotFound) {
             setState({ status: 'not_found' })
             return
@@ -65,14 +56,11 @@ export function JobDetailPage() {
     return () => {
       cancelled = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jobId, reloadToken])
 
   function handleRetry() {
-    if (hasAccessToken()) {
-      setState({ status: 'loading' })
-      setReloadToken((token) => token + 1)
-    }
+    setState({ status: 'loading' })
+    setReloadToken((token) => token + 1)
   }
 
   async function handleDelete() {
@@ -120,30 +108,6 @@ export function JobDetailPage() {
           <div className="detail-aside">
             <div className="skeleton skeleton-card" />
           </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (state.status === 'unauthorized') {
-    return (
-      <div className="page">
-        <div className="page-header">
-          <div>
-            <Link to="/" className="back-link">
-              ← Jobs
-            </Link>
-            <h1 className="page-title" style={{ marginTop: 4 }}>
-              Sign in required
-            </h1>
-          </div>
-        </div>
-        <div className="empty-state">
-          <p className="empty-state-title">You need to sign in</p>
-          <p className="empty-state-body">
-            Authentication is not wired into the frontend yet. Job details are
-            scoped to the signed-in user.
-          </p>
         </div>
       </div>
     )

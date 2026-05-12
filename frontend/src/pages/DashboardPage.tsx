@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { ApiError, hasAccessToken, jobsApi } from '../lib/api'
+import { ApiError, jobsApi } from '../lib/api'
 import { formatShortDate } from '../lib/format'
 import { JOB_STATUSES, type JobStatus, type JobSummary } from '../lib/types'
 
@@ -19,19 +19,14 @@ const BADGE_CLASS: Record<JobStatus, string> = {
 type LoadState =
   | { status: 'loading' }
   | { status: 'ready'; jobs: JobSummary[] }
-  | { status: 'unauthorized' }
   | { status: 'error'; message: string }
 
 export function DashboardPage() {
   const [activeFilter, setActiveFilter] = useState<StatusFilter>('All')
   const [reloadToken, setReloadToken] = useState(0)
-  const [state, setState] = useState<LoadState>(() =>
-    hasAccessToken() ? { status: 'loading' } : { status: 'unauthorized' },
-  )
+  const [state, setState] = useState<LoadState>({ status: 'loading' })
 
   useEffect(() => {
-    // Skip fetch when not authenticated — initial state already reflects this
-    if (state.status === 'unauthorized') return
     let cancelled = false
     ;(async () => {
       try {
@@ -40,33 +35,24 @@ export function DashboardPage() {
         setState({ status: 'ready', jobs })
       } catch (error) {
         if (cancelled) return
-        if (error instanceof ApiError && error.isUnauthorized) {
-          setState({ status: 'unauthorized' })
-          return
-        }
         const message =
-          error instanceof Error ? error.message : 'Could not load jobs'
+          error instanceof ApiError ? error.message : 'Could not load jobs'
         setState({ status: 'error', message })
       }
     })()
     return () => {
       cancelled = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeFilter, reloadToken])
 
   function handleFilterChange(next: StatusFilter) {
     setActiveFilter(next)
-    if (hasAccessToken()) {
-      setState({ status: 'loading' })
-    }
+    setState({ status: 'loading' })
   }
 
   function handleRetry() {
-    if (hasAccessToken()) {
-      setState({ status: 'loading' })
-      setReloadToken((token) => token + 1)
-    }
+    setState({ status: 'loading' })
+    setReloadToken((token) => token + 1)
   }
 
   const jobs = state.status === 'ready' ? state.jobs : []
@@ -105,15 +91,7 @@ export function DashboardPage() {
         ))}
       </div>
 
-      {state.status === 'unauthorized' ? (
-        <div className="empty-state">
-          <p className="empty-state-title">Sign in to see your jobs</p>
-          <p className="empty-state-body">
-            Authentication is not wired into the frontend yet. Once it is, your
-            tracked jobs will appear here.
-          </p>
-        </div>
-      ) : state.status === 'loading' ? (
+      {state.status === 'loading' ? (
         <DashboardSkeleton />
       ) : state.status === 'error' ? (
         <div className="empty-state">

@@ -34,33 +34,45 @@
 
 - [x] 5.1 Define resume JSON schema and DTOs for personal info, summary, skills, experience, education, certifications, and links
 - [x] 5.2 Implement backend base resume read and save endpoints with validation
-- [ ] 5.3 Build frontend resume builder with section-level editing
-- [ ] 5.4 Preserve unrelated resume sections when editing a single section
-- [ ] 5.5 Add tests for resume validation, ownership, and section updates
+- [x] 5.3 Build frontend resume builder with section-level editing
+- [x] 5.4 Preserve unrelated resume sections when editing a single section
+- [x] 5.5 Add tests for resume validation, ownership, and section updates
 
-## 6. Tailoring Workflow
+## 6. Frontend Authentication UI
 
-- [ ] 6.1 Implement backend keyword extraction from job descriptions
-- [ ] 6.2 Implement backend comparison of extracted keywords against base resume content
-- [ ] 6.3 Integrate AI suggestion generation behind a backend service with no secrets exposed to the frontend
-- [ ] 6.4 Enforce AI guardrails that prevent fabricated companies, roles, projects, credentials, metrics, or experience
-- [ ] 6.5 Implement backend endpoints for generating, saving, and listing tailored resume versions
-- [ ] 6.6 Build frontend tailoring review UI with original content, suggested content, rationale, and accept/reject/edit controls
-- [ ] 6.7 Build manual tailored resume editing without requiring AI suggestions
-- [ ] 6.8 Add tests for unsupported keywords, accepted suggestions, rejected suggestions, manual edits, and saved versions
+- [x] 6.1 Create `AuthContext` provider with user state, login, register, logout, and automatic 401 handling that clears the token and redirects to `/login`
+- [x] 6.2 Create `ProtectedRoute` component that redirects unauthenticated users to `/login` and shows a loading state while validating the token
+- [x] 6.3 Build login page at `/login` with email and password fields, inline validation, server error display, and link to register
+- [x] 6.4 Build register page at `/register` with email, password, and confirm password fields, inline validation (12+ chars, email format), server error display, and link to login
+- [x] 6.5 Build minimal landing page at `/` for unauthenticated users with product name and login/register CTAs
+- [x] 6.6 Update `App.tsx` routing: wrap protected routes with `ProtectedRoute`, add `/login`, `/register` routes, conditionally show landing page or dashboard at `/`
+- [x] 6.7 Remove per-page `hasAccessToken()` checks and `unauthorized` state handling from DashboardPage, JobDetailPage, JobFormPage, and ResumeBuilderPage
+- [x] 6.8 Add logout action to the app navigation header
+- [ ] 6.9 Add tests for login flow, register flow, 401 redirect, protected route guard, and inline validation
 
-## 7. Resume Preview And PDF Export
+## 7. Tailoring Workflow
 
-- [ ] 7.1 Implement backend HTML rendering from saved structured resume content
-- [ ] 7.2 Build frontend resume preview for base and tailored resume versions
-- [ ] 7.3 Integrate server-side PDF rendering from saved resume HTML
-- [ ] 7.4 Implement protected PDF export endpoint for owned resume versions
-- [ ] 7.5 Ensure export excludes rejected or unaccepted suggestions and handles unsaved editor changes clearly
-- [ ] 7.6 Add tests for preview rendering, export ownership, and export source integrity
+- [ ] 7.1 Implement backend keyword extraction from job descriptions
+- [ ] 7.2 Implement backend comparison of extracted keywords against base resume content
+- [ ] 7.3 Integrate AI suggestion generation behind a backend service with no secrets exposed to the frontend
+- [ ] 7.4 Enforce AI guardrails that prevent fabricated companies, roles, projects, credentials, metrics, or experience
+- [ ] 7.5 Implement backend endpoints for generating, saving, and listing tailored resume versions
+- [ ] 7.6 Build frontend tailoring review UI with original content, suggested content, rationale, and accept/reject/edit controls
+- [ ] 7.7 Build manual tailored resume editing without requiring AI suggestions
+- [ ] 7.8 Add tests for unsupported keywords, accepted suggestions, rejected suggestions, manual edits, and saved versions
 
-## 8. End-To-End Verification
+## 8. Resume Preview And PDF Export
 
-- [ ] 8.1 Add frontend tests for dashboard, job detail, resume builder, tailoring review, and export UI states
-- [ ] 8.2 Add end-to-end workflow test for sign in, create base resume, add job, tailor resume, save version, and export PDF
-- [ ] 8.3 Run backend test suite and frontend test suite
-- [ ] 8.4 Verify local startup instructions for both `frontend/` and `backend/`
+- [ ] 8.1 Implement backend HTML rendering from saved structured resume content
+- [ ] 8.2 Build frontend resume preview for base and tailored resume versions
+- [ ] 8.3 Integrate server-side PDF rendering from saved resume HTML
+- [ ] 8.4 Implement protected PDF export endpoint for owned resume versions
+- [ ] 8.5 Ensure export excludes rejected or unaccepted suggestions and handles unsaved editor changes clearly
+- [ ] 8.6 Add tests for preview rendering, export ownership, and export source integrity
+
+## 9. End-To-End Verification
+
+- [ ] 9.1 Add frontend tests for dashboard, job detail, resume builder, tailoring review, and export UI states
+- [ ] 9.2 Add end-to-end workflow test for sign in, create base resume, add job, tailor resume, save version, and export PDF
+- [ ] 9.3 Run backend test suite and frontend test suite
+- [ ] 9.4 Verify local startup instructions for both `frontend/` and `backend/`

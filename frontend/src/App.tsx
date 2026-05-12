@@ -1,7 +1,11 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
+import { useAuth } from './lib/auth'
 import { DashboardPage } from './pages/DashboardPage'
 import { JobDetailPage } from './pages/JobDetailPage'
 import { JobFormPage } from './pages/JobFormPage'
+import { LandingPage } from './pages/LandingPage'
+import { LoginPage } from './pages/LoginPage'
+import { RegisterPage } from './pages/RegisterPage'
 import { ResumeBuilderPage } from './pages/ResumeBuilderPage'
 import { TailoringPage } from './pages/TailoringPage'
 
@@ -39,7 +43,9 @@ const nav = [
   },
 ]
 
-function App() {
+function AppShell() {
+  const { logout } = useAuth()
+
   return (
     <div className="app-shell">
       <header className="topbar">
@@ -53,6 +59,9 @@ function App() {
         <div className="topbar-divider" />
         <span className="topbar-meta">MVP</span>
         <div className="topbar-spacer" />
+        <button type="button" className="btn-text topbar-logout" onClick={logout}>
+          Sign out
+        </button>
       </header>
 
       <aside className="sidebar">
@@ -75,15 +84,47 @@ function App() {
       <main className="main">
         <Routes>
           <Route index element={<DashboardPage />} />
-          <Route path="/jobs/new" element={<JobFormPage mode="create" />} />
-          <Route path="/jobs/:jobId" element={<JobDetailPage />} />
-          <Route path="/jobs/:jobId/edit" element={<JobFormPage mode="edit" />} />
-          <Route path="/resume" element={<ResumeBuilderPage />} />
-          <Route path="/tailor" element={<TailoringPage />} />
+          <Route path="jobs/new" element={<JobFormPage mode="create" />} />
+          <Route path="jobs/:jobId" element={<JobDetailPage />} />
+          <Route path="jobs/:jobId/edit" element={<JobFormPage mode="edit" />} />
+          <Route path="resume" element={<ResumeBuilderPage />} />
+          <Route path="tailor" element={<TailoringPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
     </div>
+  )
+}
+
+/** Shows landing for anonymous users, dashboard shell for authenticated. */
+function RootRoute() {
+  const { user, isLoading } = useAuth()
+
+  if (isLoading) {
+    return (
+      <div className="auth-loading" aria-busy="true">
+        <div className="auth-loading-spinner" />
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <LandingPage />
+  }
+
+  return <AppShell />
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route
+        path="/*"
+        element={<RootRoute />}
+      />
+    </Routes>
   )
 }
 

@@ -89,6 +89,73 @@ public sealed class BaseResumeEndpointsTests
     }
 
     [Fact]
+    public async Task SaveBaseResume_ForDifferentUsers_KeepsResumesIsolated()
+    {
+        await using var factory = await CreateMigratedFactoryAsync();
+        await ResetDatabaseAsync(factory);
+        await SeedUsersAsync(factory, OwnerUserId, OtherUserId);
+
+        var ownerClient = factory.CreateClient();
+        ownerClient.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
+        await ownerClient.PutAsJsonAsync("/api/resume/base", CreateResumeRequest("Ada Lovelace"));
+
+        var otherClient = factory.CreateClient();
+        otherClient.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OtherUserId);
+        await otherClient.PutAsJsonAsync("/api/resume/base", CreateResumeRequest("Grace Hopper"));
+
+        var ownerResponse = await ownerClient.GetAsync("/api/resume/base");
+        var otherResponse = await otherClient.GetAsync("/api/resume/base");
+
+        Assert.Equal(HttpStatusCode.OK, ownerResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, otherResponse.StatusCode);
+
+        var ownerPayload = await ReadJsonAsync(ownerResponse);
+        var otherPayload = await ReadJsonAsync(otherResponse);
+
+        Assert.Equal(
+            "Ada Lovelace",
+            ownerPayload.GetProperty("data").GetProperty("content").GetProperty("personalInfo").GetProperty("fullName").GetString());
+        Assert.Equal(
+            "Grace Hopper",
+            otherPayload.GetProperty("data").GetProperty("content").GetProperty("personalInfo").GetProperty("fullName").GetString());
+    }
+
+    [Fact]
+    public async Task SaveBaseResume_WhenUpdatingSkillsSection_PreservesUnrelatedSections()
+    {
+        await using var factory = await CreateMigratedFactoryAsync();
+        await ResetDatabaseAsync(factory);
+        await SeedUsersAsync(factory, OwnerUserId);
+
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
+
+        await client.PutAsJsonAsync("/api/resume/base", CreateResumeRequest("Ada Lovelace"));
+
+        var response = await client.PutAsJsonAsync(
+            "/api/resume/base",
+            CreateResumeRequest("Ada Lovelace", skills: new[] { "PostgreSQL", "Redis", "ASP.NET Core" }));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var payload = await ReadJsonAsync(response);
+        var content = payload.GetProperty("data").GetProperty("content");
+        var skills = content.GetProperty("skills").EnumerateArray().Select(skill => skill.GetString()).ToArray();
+
+        Assert.Equal(new[] { "PostgreSQL", "Redis", "ASP.NET Core" }, skills);
+        Assert.Equal("Builds reliable APIs.", content.GetProperty("summary").GetString());
+        Assert.Equal(
+            "Built API workflows.",
+            content.GetProperty("experience")[0].GetProperty("bullets")[0].GetString());
+        Assert.Equal(
+            "Example University",
+            content.GetProperty("education")[0].GetProperty("institution").GetString());
+        Assert.Equal(
+            "https://example.test/portfolio",
+            content.GetProperty("links")[0].GetProperty("url").GetString());
+    }
+
+    [Fact]
     public async Task SaveBaseResume_WithMalformedContent_ReturnsBadRequest()
     {
         await using var factory = await CreateMigratedFactoryAsync();
@@ -166,7 +233,9 @@ public sealed class BaseResumeEndpointsTests
         await dbContext.SaveChangesAsync();
     }
 
-    private static object CreateResumeRequest(string fullName) => new
+    private static object CreateResumeRequest(
+        string fullName,
+        IReadOnlyList<string>? skills = null) => new
     {
         Content = new
         {
@@ -180,7 +249,7 @@ public sealed class BaseResumeEndpointsTests
                 Website = "https://example.test"
             },
             Summary = "Builds reliable APIs.",
-            Skills = new[] { "ASP.NET Core", "PostgreSQL" },
+            Skills = skills ?? new[] { "ASP.NET Core", "PostgreSQL" },
             Experience = new[]
             {
                 new

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ApiError, hasAccessToken, resumeApi } from '../lib/api'
+import { resumeApi } from '../lib/api'
 import type {
   ResumeCertification,
   ResumeContent,
@@ -77,13 +77,10 @@ const SECTIONS: SectionDef[] = [
 type LoadState =
   | { status: 'loading' }
   | { status: 'ready' }
-  | { status: 'unauthorized' }
   | { status: 'error'; message: string }
 
 export function ResumeBuilderPage() {
-  const [loadState, setLoadState] = useState<LoadState>(() =>
-    hasAccessToken() ? { status: 'loading' } : { status: 'unauthorized' },
-  )
+  const [loadState, setLoadState] = useState<LoadState>({ status: 'loading' })
   const [content, setContent] = useState<ResumeContent>(emptyResumeContent)
   const [activeSection, setActiveSection] = useState<SectionId | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -95,7 +92,6 @@ export function ResumeBuilderPage() {
   const serverContent = useRef<ResumeContent>(emptyResumeContent())
 
   useEffect(() => {
-    if (loadState.status === 'unauthorized') return
     let cancelled = false
     ;(async () => {
       try {
@@ -109,31 +105,20 @@ export function ResumeBuilderPage() {
         setLoadState({ status: 'ready' })
       } catch (error) {
         if (cancelled) return
-        if (error instanceof ApiError && error.isUnauthorized) {
-          setLoadState({ status: 'unauthorized' })
-          return
-        }
         const message =
           error instanceof Error ? error.message : 'Could not load resume'
         setLoadState({ status: 'error', message })
       }
     })()
     return () => { cancelled = true }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reloadToken])
 
   function handleRetry() {
-    if (hasAccessToken()) {
-      setLoadState({ status: 'loading' })
-      setReloadToken((t) => t + 1)
-    }
+    setLoadState({ status: 'loading' })
+    setReloadToken((t) => t + 1)
   }
 
   async function handleSave() {
-    if (!hasAccessToken()) {
-      setLoadState({ status: 'unauthorized' })
-      return
-    }
     setIsSaving(true)
     setSaveError(null)
     try {
@@ -142,10 +127,6 @@ export function ResumeBuilderPage() {
       setContent(saved.content)
       setLastSaved(saved.updatedAt)
     } catch (error) {
-      if (error instanceof ApiError && error.isUnauthorized) {
-        setLoadState({ status: 'unauthorized' })
-        return
-      }
       setSaveError(error instanceof Error ? error.message : 'Save failed')
     } finally {
       setIsSaving(false)
@@ -177,20 +158,6 @@ export function ResumeBuilderPage() {
               <div className="skeleton skeleton-line" style={{ width: '15%' }} />
             </div>
           ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (loadState.status === 'unauthorized') {
-    return (
-      <div className="page">
-        <PageHeader isSaving={false} onSave={handleSave} />
-        <div className="empty-state">
-          <p className="empty-state-title">Sign in to edit your resume</p>
-          <p className="empty-state-body">
-            Your base resume is tied to your account. Sign in to create or edit it.
-          </p>
         </div>
       </div>
     )

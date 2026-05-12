@@ -98,6 +98,41 @@ Alternatives considered:
 - Browser print/export from the frontend: simpler, but output varies by browser and is harder to test.
 - AI-generated PDF content: rejected because export should be deterministic from user-approved resume data.
 
+### Use a centralized auth context with route guards for frontend authentication
+
+The frontend will use a React context provider (`AuthContext`) that holds the current user state, access token, and loading flag. A `ProtectedRoute` wrapper component will redirect unauthenticated users to `/login`. The auth context will:
+
+- On mount: check localStorage for an existing token and validate it via `GET /api/users/me`
+- Expose `login(email, password)`, `register(email, password)`, and `logout()` functions
+- Intercept 401 responses from any API call to trigger automatic logout and redirect
+
+This replaces the per-page `hasAccessToken()` checks and "unauthorized" state handling currently scattered across DashboardPage, JobDetailPage, JobFormPage, and ResumeBuilderPage.
+
+Rationale: centralizing auth state eliminates duplicated logic, provides a single point of control for session management, and makes route protection declarative rather than imperative in each page component.
+
+Alternatives considered:
+
+- Keep per-page auth checks: works but duplicates logic across every protected page and makes the unauthorized UX inconsistent.
+- Silent token refresh: adds complexity (refresh token storage, race conditions) without clear MVP benefit. Redirect to login on expiry is simpler and acceptable for an MVP.
+
+### Use register-and-go without email confirmation
+
+New users can register with email and password (12+ characters, unique email) and immediately access the app. No email verification step.
+
+Rationale: reduces friction for MVP onboarding. Email confirmation can be added later as a separate change without breaking existing accounts.
+
+### Show a minimal landing page for unauthenticated users
+
+The root route `/` shows a simple landing page with the product name and login/register CTAs when no user is authenticated. Authenticated users see the dashboard at the same route.
+
+Rationale: gives the app a public entry point without building a full marketing site. The landing page is a placeholder that can be expanded later.
+
+### Use inline form validation for auth forms
+
+Login and register forms validate input as the user types (email format, password length) rather than only on submit. Server errors (duplicate email, wrong credentials) display after submission.
+
+Rationale: immediate feedback reduces failed submissions and communicates requirements clearly, especially the 12-character password minimum.
+
 ## Risks / Trade-offs
 
 - AI may suggest unsupported claims -> Require structured suggestions with source evidence and keep accept/reject review mandatory.
@@ -121,7 +156,7 @@ Rollback is simple during MVP development: revert the change branch or remove th
 
 ## Open Questions
 
-- Which production auth model should be used for launch: backend identity only, or a hosted identity provider?
+- ~~Which production auth model should be used for launch: backend identity only, or a hosted identity provider?~~ Decided: backend ASP.NET Identity with bearer tokens, register-and-go (no email confirmation), 401 triggers redirect to login (no silent refresh).
 - Which PostgreSQL hosting target should be assumed for deployment?
 - Which AI model and budget limits should be configured for MVP usage?
 - Should tailored resume history retain every suggestion batch, only accepted versions, or both?
