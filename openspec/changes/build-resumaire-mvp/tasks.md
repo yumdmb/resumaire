@@ -26,8 +26,8 @@
 - [x] 4.1 Implement backend job CRUD endpoints scoped to the authenticated user
 - [x] 4.2 Implement backend status validation for `Saved`, `Applied`, `Interview`, `Rejected`, and `Offer`
 - [x] 4.3 Implement backend job detail endpoint with saved tailored resume versions
-- [ ] 4.4 Build frontend dashboard with status filters
-- [ ] 4.5 Build frontend add/edit job form and job detail page
+- [x] 4.4 Build frontend dashboard with status filters
+- [x] 4.5 Build frontend add/edit job form and job detail page
 - [ ] 4.6 Add tests for job ownership, CRUD behavior, status filtering, and invalid statuses
 
 ## 5. Resume Profile

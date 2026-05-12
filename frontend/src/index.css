@@ -659,3 +659,240 @@ code {
     grid-template-columns: 1fr;
   }
 }
+
+/* ─── Page actions ───────────────────────────────────────────── */
+
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  transition: color 120ms ease;
+}
+
+.back-link:hover {
+  color: var(--text-primary);
+}
+
+/* ─── Prose / read-only text ─────────────────────────────────── */
+
+.prose {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  max-width: 70ch;
+}
+
+.prose-muted {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+/* ─── Detail extras ──────────────────────────────────────────── */
+
+.meta-link {
+  font-size: 13px;
+  color: var(--accent-text);
+  font-weight: 500;
+}
+
+.meta-link:hover {
+  text-decoration: underline;
+}
+
+.empty-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) 0;
+  text-align: center;
+}
+
+/* ─── Tailored versions list ─────────────────────────────────── */
+
+.version-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.version-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.version-row:last-child {
+  border-bottom: none;
+}
+
+.version-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.version-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+/* ─── Form card ──────────────────────────────────────────────── */
+
+.form-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: var(--space-6);
+  max-width: 720px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.form-row-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.form-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: -0.005em;
+}
+
+.form-required {
+  color: var(--status-rejected);
+  font-weight: 400;
+}
+
+.form-input {
+  width: 100%;
+  font-size: 13.5px;
+  color: var(--text-primary);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.form-input:hover {
+  border-color: var(--border-strong);
+}
+
+.form-input:focus {
+  outline: none;
+  background: var(--surface);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px oklch(85% 0.06 264 / 0.35);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.6;
+  font-family: var(--font);
+}
+
+.form-error {
+  font-size: 12px;
+  color: var(--status-rejected);
+  line-height: 1.45;
+}
+
+.form-alert {
+  border: 1px solid oklch(82% 0.05 25);
+  background: oklch(97% 0.02 25);
+  color: oklch(35% 0.1 25);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  font-size: 13px;
+  max-width: 720px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ─── Skeletons ──────────────────────────────────────────────── */
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.85; }
+}
+
+.skeleton {
+  background: var(--surface-sunken);
+  border-radius: var(--radius-sm);
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 12px;
+  border-radius: 4px;
+}
+
+.skeleton-heading {
+  height: 22px;
+  border-radius: 6px;
+}
+
+.skeleton-pill {
+  height: 18px;
+  width: 72px;
+  border-radius: 999px;
+}
+
+.skeleton-card {
+  height: 140px;
+  border-radius: var(--radius-lg);
+}
+
+/* ─── Form responsive ────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .form-row-two {
+    grid-template-columns: 1fr;
+  }
+
+  .form-card {
+    padding: var(--space-5);
+  }
+}

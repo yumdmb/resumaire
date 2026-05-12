@@ -1,6 +1,7 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
 import { DashboardPage } from './pages/DashboardPage'
 import { JobDetailPage } from './pages/JobDetailPage'
+import { JobFormPage } from './pages/JobFormPage'
 import { ResumeBuilderPage } from './pages/ResumeBuilderPage'
 import { TailoringPage } from './pages/TailoringPage'
 
@@ -74,7 +75,9 @@ function App() {
       <main className="main">
         <Routes>
           <Route index element={<DashboardPage />} />
+          <Route path="/jobs/new" element={<JobFormPage mode="create" />} />
           <Route path="/jobs/:jobId" element={<JobDetailPage />} />
+          <Route path="/jobs/:jobId/edit" element={<JobFormPage mode="edit" />} />
           <Route path="/resume" element={<ResumeBuilderPage />} />
           <Route path="/tailor" element={<TailoringPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
