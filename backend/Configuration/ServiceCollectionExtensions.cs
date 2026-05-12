@@ -18,6 +18,10 @@ public static class ServiceCollectionExtensions
             .Validate(options => options.AllowedOrigins.Length > 0, "At least one CORS origin must be configured.")
             .ValidateOnStart();
 
+        services
+            .AddOptions<OpenAiOptions>()
+            .Bind(configuration.GetSection(OpenAiOptions.SectionName));
+
         return services;
     }
 
@@ -76,6 +80,11 @@ public static class ServiceCollectionExtensions
         services.AddOpenApi();
         services.AddScoped<IJobKeywordExtractor, JobKeywordExtractor>();
         services.AddScoped<IResumeKeywordComparer, ResumeKeywordComparer>();
+        services.AddScoped<TailoringSuggestionGuardrails>();
+        services.AddHttpClient<IAiTailoringSuggestionGenerator, OpenAiTailoringSuggestionGenerator>(client =>
+        {
+            client.BaseAddress = new Uri("https://api.openai.com/v1/");
+        });
 
         services.AddCors(options =>
         {

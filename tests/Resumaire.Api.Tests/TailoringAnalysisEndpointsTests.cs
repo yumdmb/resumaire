@@ -1,12 +1,17 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Resumaire.Api.Contracts;
 using Resumaire.Api.Data;
 using Resumaire.Api.Data.Entities;
 using Resumaire.Api.Tests.Infrastructure;
+using Resumaire.Api.Tailoring;
 
 namespace Resumaire.Api.Tests;
 
@@ -96,12 +101,129 @@ public sealed class TailoringAnalysisEndpointsTests
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 
+    [Fact]
+    public async Task GenerateSuggestionsAndSaveVersion_ForOwner_PersistsSuggestionAndVersion()
+    {
+        await using var factory = await CreateMigratedFactoryAsync();
+        await ResetDatabaseAsync(factory);
+        var baseResumeId = await SeedBaseResumeAsync(factory, OwnerUserId);
+        var jobId = await SeedJobAsync(factory, OwnerUserId, baseResumeId);
+        using var appFactory = WithFakeAiGenerator(
+            factory,
+            new AiTailoringSuggestionGenerationResult(
+                [
+                    new AiTailoringSuggestionDraft(
+                        "Experience",
+                        "Built a React dashboard for API workflow review.",
+                        "Built a React dashboard for API workflow review.",
+                        "The job emphasizes React, and this existing bullet already supports that keyword.",
+                        [ "Experience[0].Bullets[0]" ],
+                        "No new experience was added.")
+                ],
+                [
+                    new AiTailoringGapNote(
+                        "Docker",
+                        "Docker appears in the job description but is not supported by the base resume evidence.")
+                ]));
+
+        var client = appFactory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
+
+        var suggestionsResponse = await client.PostAsync($"/api/jobs/{jobId}/tailoring/suggestions", content: null);
+
+        Assert.Equal(HttpStatusCode.OK, suggestionsResponse.StatusCode);
+        var suggestionsPayload = await ReadJsonAsync(suggestionsResponse);
+        var suggestions = suggestionsPayload.GetProperty("data").GetProperty("suggestions").EnumerateArray().ToArray();
+        var suggestion = Assert.Single(suggestions);
+        var suggestionId = suggestion.GetProperty("id").GetGuid();
+        Assert.Equal("Pending", suggestion.GetProperty("reviewState").GetString());
+        Assert.Equal("Experience", suggestion.GetProperty("targetSection").GetString());
+
+        var saveResponse = await client.PostAsJsonAsync($"/api/jobs/{jobId}/tailoring/versions", new
+        {
+            Name = "Example Co tailored resume",
+            Content = CreateResumeContent(),
+            AcceptedSuggestionIds = new[] { suggestionId },
+            RejectedSuggestionIds = Array.Empty<Guid>()
+        });
+
+        Assert.Equal(HttpStatusCode.Created, saveResponse.StatusCode);
+        var savedPayload = await ReadJsonAsync(saveResponse);
+        var savedVersion = savedPayload.GetProperty("data");
+        var versionId = savedVersion.GetProperty("id").GetGuid();
+        Assert.Equal(1, savedVersion.GetProperty("versionNumber").GetInt32());
+        Assert.Equal(baseResumeId, savedVersion.GetProperty("sourceBaseResumeId").GetGuid());
+
+        var listResponse = await client.GetAsync($"/api/jobs/{jobId}/tailoring/versions");
+
+        Assert.Equal(HttpStatusCode.OK, listResponse.StatusCode);
+        var listPayload = await ReadJsonAsync(listResponse);
+        var versions = listPayload.GetProperty("data").EnumerateArray().ToArray();
+        var listedVersion = Assert.Single(versions);
+        Assert.Equal(versionId, listedVersion.GetProperty("id").GetGuid());
+        Assert.Equal("Ada Lovelace", listedVersion.GetProperty("content").GetProperty("personalInfo").GetProperty("fullName").GetString());
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var storedSuggestion = await dbContext.TailoringSuggestions.SingleAsync(value => value.Id == suggestionId);
+        var storedJob = await dbContext.Jobs.SingleAsync(value => value.Id == jobId);
+        Assert.Equal(TailoringSuggestionReviewState.Accepted, storedSuggestion.ReviewState);
+        Assert.Equal(versionId, storedSuggestion.TailoredResumeId);
+        Assert.Equal(versionId, storedJob.SelectedTailoredResumeId);
+    }
+
+    [Fact]
+    public async Task GenerateSuggestions_WhenAiAddsUnsupportedKeyword_ReturnsUnprocessableEntity()
+    {
+        await using var factory = await CreateMigratedFactoryAsync();
+        await ResetDatabaseAsync(factory);
+        var baseResumeId = await SeedBaseResumeAsync(factory, OwnerUserId);
+        var jobId = await SeedJobAsync(factory, OwnerUserId, baseResumeId);
+        using var appFactory = WithFakeAiGenerator(
+            factory,
+            new AiTailoringSuggestionGenerationResult(
+                [
+                    new AiTailoringSuggestionDraft(
+                        "Experience",
+                        "Built a React dashboard for API workflow review.",
+                        "Built a Docker and Kubernetes platform for API workflow review.",
+                        "This improperly tries to add missing job keywords.",
+                        [ "Experience[0].Bullets[0]" ],
+                        "Invalid fabricated tooling.")
+                ],
+                []));
+
+        var client = appFactory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
+
+        var response = await client.PostAsync($"/api/jobs/{jobId}/tailoring/suggestions", content: null);
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        Assert.False(await dbContext.TailoringSuggestions.AnyAsync(value => value.JobId == jobId));
+    }
+
     private async Task<ResumaireApiFactory> CreateMigratedFactoryAsync()
     {
         var factory = new ResumaireApiFactory().WithSqlite();
         await factory.MigrateDatabaseAsync();
         return factory;
     }
+
+    private static WebApplicationFactory<Program> WithFakeAiGenerator(
+        ResumaireApiFactory factory,
+        AiTailoringSuggestionGenerationResult result) =>
+        factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureTestServices(services =>
+            {
+                services.RemoveAll<IAiTailoringSuggestionGenerator>();
+                services.AddSingleton<IAiTailoringSuggestionGenerator>(
+                    new FakeAiTailoringSuggestionGenerator(result));
+            });
+        });
 
     private static async Task ResetDatabaseAsync(ResumaireApiFactory factory)
     {
@@ -237,6 +359,15 @@ public sealed class TailoringAnalysisEndpointsTests
     {
         var payload = await response.Content.ReadFromJsonAsync<JsonElement>();
         return payload;
+    }
+
+    private sealed class FakeAiTailoringSuggestionGenerator(AiTailoringSuggestionGenerationResult result)
+        : IAiTailoringSuggestionGenerator
+    {
+        public Task<AiTailoringSuggestionGenerationResult> GenerateAsync(
+            AiTailoringSuggestionGenerationRequest request,
+            CancellationToken cancellationToken) =>
+            Task.FromResult(result);
     }
 
     private const string OwnerUserId = "owner-user";

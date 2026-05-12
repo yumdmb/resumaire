@@ -54,9 +54,9 @@
 
 - [x] 7.1 Implement backend keyword extraction from job descriptions
 - [x] 7.2 Implement backend comparison of extracted keywords against base resume content
-- [ ] 7.3 Integrate AI suggestion generation behind a backend service with no secrets exposed to the frontend
-- [ ] 7.4 Enforce AI guardrails that prevent fabricated companies, roles, projects, credentials, metrics, or experience
-- [ ] 7.5 Implement backend endpoints for generating, saving, and listing tailored resume versions
+- [x] 7.3 Integrate AI suggestion generation behind a backend service with no secrets exposed to the frontend
+- [x] 7.4 Enforce AI guardrails that prevent fabricated companies, roles, projects, credentials, metrics, or experience
+- [x] 7.5 Implement backend endpoints for generating, saving, and listing tailored resume versions
 - [ ] 7.6 Build frontend tailoring review UI with original content, suggested content, rationale, and accept/reject/edit controls
 - [ ] 7.7 Build manual tailored resume editing without requiring AI suggestions
 - [ ] 7.8 Add tests for unsupported keywords, accepted suggestions, rejected suggestions, manual edits, and saved versions
