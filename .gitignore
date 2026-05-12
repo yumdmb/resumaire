@@ -5,6 +5,7 @@
 .github/
 .kiro/
 .opencode/
+docs/
 frontend/node_modules/
 frontend/dist/
 **/bin/

@@ -52,10 +52,12 @@ VITE_API_BASE_URL=http://localhost:5194
 
 ```powershell
 dotnet user-secrets set --project backend "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=resumaire;Username=postgres;Password=postgres"
+dotnet user-secrets set --project backend "OpenAI:BaseUrl" "https://api.openai.com/v1/"
+dotnet user-secrets set --project backend "OpenAI:Model" "gpt-4o-mini"
 dotnet user-secrets set --project backend "OpenAI:ApiKey" "<your-key>"
 ```
 
-`OpenAI:ApiKey` is only needed once AI features are used.
+`OpenAI:ApiKey` is only needed once AI features are used. `OpenAI:BaseUrl` may point to another OpenAI-compatible provider if that provider supports the `/responses` endpoint and the structured output request/response shape used by the backend.
 
 ### 4. Start PostgreSQL
 
