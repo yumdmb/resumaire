@@ -32,8 +32,8 @@
 
 ## 5. Resume Profile
 
-- [ ] 5.1 Define resume JSON schema and DTOs for personal info, summary, skills, experience, education, certifications, and links
-- [ ] 5.2 Implement backend base resume read and save endpoints with validation
+- [x] 5.1 Define resume JSON schema and DTOs for personal info, summary, skills, experience, education, certifications, and links
+- [x] 5.2 Implement backend base resume read and save endpoints with validation
 - [ ] 5.3 Build frontend resume builder with section-level editing
 - [ ] 5.4 Preserve unrelated resume sections when editing a single section
 - [ ] 5.5 Add tests for resume validation, ownership, and section updates

@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://resumaire.local/schemas/resume-content.schema.json",
+  "title": "Resumaire Resume Content",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "personalInfo",
+    "summary",
+    "skills",
+    "experience",
+    "education",
+    "certifications",
+    "links"
+  ],
+  "properties": {
+    "personalInfo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fullName"
+      ],
+      "properties": {
+        "fullName": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "email": { "type": ["string", "null"], "format": "email", "maxLength": 320 },
+        "phone": { "type": ["string", "null"], "maxLength": 50 },
+        "location": { "type": ["string", "null"], "maxLength": 200 },
+        "headline": { "type": ["string", "null"], "maxLength": 200 },
+        "website": { "type": ["string", "null"], "format": "uri", "maxLength": 2048 }
+      }
+    },
+    "summary": { "type": "string", "maxLength": 4000 },
+    "skills": {
+      "type": "array",
+      "maxItems": 100,
+      "items": { "type": "string", "minLength": 1, "maxLength": 100 }
+    },
+    "experience": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/experienceItem" }
+    },
+    "education": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/educationItem" }
+    },
+    "certifications": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/certificationItem" }
+    },
+    "links": {
+      "type": "array",
+      "maxItems": 50,
+      "items": { "$ref": "#/$defs/linkItem" }
+    }
+  },
+  "$defs": {
+    "id": { "type": ["string", "null"], "maxLength": 100 },
+    "shortText": { "type": ["string", "null"], "maxLength": 200 },
+    "dateText": { "type": ["string", "null"], "maxLength": 50 },
+    "detailList": {
+      "type": "array",
+      "maxItems": 30,
+      "items": { "type": "string", "minLength": 1, "maxLength": 1000 }
+    },
+    "experienceItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "organization",
+        "bullets"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "role": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "organization": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "location": { "$ref": "#/$defs/shortText" },
+        "startDate": { "$ref": "#/$defs/dateText" },
+        "endDate": { "$ref": "#/$defs/dateText" },
+        "isCurrent": { "type": "boolean" },
+        "bullets": { "$ref": "#/$defs/detailList" }
+      }
+    },
+    "educationItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "institution",
+        "details"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "institution": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "degree": { "$ref": "#/$defs/shortText" },
+        "field": { "$ref": "#/$defs/shortText" },
+        "location": { "$ref": "#/$defs/shortText" },
+        "startDate": { "$ref": "#/$defs/dateText" },
+        "endDate": { "$ref": "#/$defs/dateText" },
+        "details": { "$ref": "#/$defs/detailList" }
+      }
+    },
+    "certificationItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "issuer"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "issuer": { "type": "string", "minLength": 1, "maxLength": 200 },
+        "issuedDate": { "$ref": "#/$defs/dateText" },
+        "expirationDate": { "$ref": "#/$defs/dateText" },
+        "credentialId": { "$ref": "#/$defs/shortText" },
+        "url": { "type": ["string", "null"], "format": "uri", "maxLength": 2048 }
+      }
+    },
+    "linkItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "url"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "label": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "url": { "type": "string", "format": "uri", "maxLength": 2048 }
+      }
+    }
+  }
+}

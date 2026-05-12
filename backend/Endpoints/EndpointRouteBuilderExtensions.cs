@@ -27,6 +27,7 @@ public static class EndpointRouteBuilderExtensions
             .WithName("GetCurrentUser");
 
         endpoints.MapJobsEndpoints();
+        endpoints.MapBaseResumeEndpoints();
 
         return endpoints;
     }
