@@ -7,6 +7,9 @@ import type {
   JobStatus,
   JobSummary,
   ResumeContent,
+  TailoredResumeDetail,
+  TailoringAnalysis,
+  TailoringSuggestionBatch,
 } from './types'
 
 const AUTH_TOKEN_KEY = 'resumaire:accessToken'
@@ -188,6 +191,58 @@ export const resumeApi = {
       body: JSON.stringify({ content }),
     })
     if (!saved) throw new ApiError('Empty response from save', 500)
+    return saved
+  },
+}
+
+export const tailoringApi = {
+  async analyze(jobId: string): Promise<TailoringAnalysis> {
+    const result = await request<TailoringAnalysis>(
+      `/api/jobs/${jobId}/tailoring/analysis`,
+    )
+    if (!result) throw new ApiError('Empty response from analysis', 500)
+    return result
+  },
+
+  async generateSuggestions(jobId: string): Promise<TailoringSuggestionBatch> {
+    const result = await request<TailoringSuggestionBatch>(
+      `/api/jobs/${jobId}/tailoring/suggestions`,
+      { method: 'POST' },
+    )
+    if (!result) throw new ApiError('Empty response from suggestions', 500)
+    return result
+  },
+
+  async listVersions(jobId: string): Promise<TailoredResumeDetail[]> {
+    return (
+      (await request<TailoredResumeDetail[]>(
+        `/api/jobs/${jobId}/tailoring/versions`,
+      )) ?? []
+    )
+  },
+
+  async saveVersion(
+    jobId: string,
+    params: {
+      name?: string
+      content: ResumeContent
+      acceptedSuggestionIds?: string[]
+      rejectedSuggestionIds?: string[]
+    },
+  ): Promise<TailoredResumeDetail> {
+    const saved = await request<TailoredResumeDetail>(
+      `/api/jobs/${jobId}/tailoring/versions`,
+      {
+        method: 'POST',
+        body: JSON.stringify({
+          name: params.name ?? null,
+          content: params.content,
+          acceptedSuggestionIds: params.acceptedSuggestionIds ?? [],
+          rejectedSuggestionIds: params.rejectedSuggestionIds ?? [],
+        }),
+      },
+    )
+    if (!saved) throw new ApiError('Empty response from save version', 500)
     return saved
   },
 }

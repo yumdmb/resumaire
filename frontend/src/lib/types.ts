@@ -189,3 +189,93 @@ export interface JobFormValues {
 export type FieldErrors = Partial<Record<keyof JobFormValues, string[]>> & {
   _general?: string[]
 }
+
+// ─── Tailoring types ───────────────────────────────────────────
+
+export interface JobKeyword {
+  text: string
+  category: string
+  aliases: string[]
+  mentionCount: number
+}
+
+export interface ResumeKeywordEvidence {
+  section: string
+  path: string
+  text: string
+}
+
+export interface SupportedKeyword {
+  keyword: JobKeyword
+  evidence: ResumeKeywordEvidence[]
+}
+
+export interface MissingKeyword {
+  keyword: JobKeyword
+}
+
+export interface ReorderOpportunity {
+  keyword: JobKeyword
+  currentEvidence: ResumeKeywordEvidence[]
+  suggestedSections: string[]
+}
+
+export interface KeywordComparison {
+  supportedKeywords: SupportedKeyword[]
+  missingKeywords: MissingKeyword[]
+  reorderOpportunities: ReorderOpportunity[]
+}
+
+export interface TailoringAnalysis {
+  jobId: string
+  baseResumeId: string
+  baseResumeRevision: number
+  extractedKeywords: JobKeyword[]
+  comparison: KeywordComparison
+}
+
+export interface TailoringSourceEvidence {
+  section: string
+  path: string
+  text: string
+}
+
+export interface TailoringSuggestion {
+  id: string
+  reviewState: 'Pending' | 'Accepted' | 'Rejected'
+  targetSection: string
+  originalContent: string | null
+  suggestedContent: string
+  rationale: string | null
+  aiNotes: string | null
+  sourceEvidence: TailoringSourceEvidence[]
+  createdAt: string
+  reviewedAt: string | null
+}
+
+export interface TailoringGapNote {
+  keyword: string
+  reason: string
+}
+
+export interface TailoringSuggestionBatch {
+  jobId: string
+  baseResumeId: string
+  baseResumeRevision: number
+  suggestions: TailoringSuggestion[]
+  gapNotes: TailoringGapNote[]
+  guardrailRejections: string[]
+}
+
+export interface TailoredResumeDetail {
+  id: string
+  versionNumber: number
+  name: string | null
+  jobId: string
+  sourceBaseResumeId: string
+  sourceBaseResumeRevision: number
+  schemaVersion: number
+  content: ResumeContent
+  createdAt: string
+  updatedAt: string
+}

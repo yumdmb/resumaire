@@ -1299,3 +1299,597 @@ code {
 .topbar-logout:hover {
   color: var(--text-primary);
 }
+
+
+/* ─── Tailoring: loading ─────────────────────────────────────── */
+
+.tailor-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-10) 0;
+  color: var(--text-secondary);
+}
+
+.tailor-loading-label {
+  font-size: 13px;
+}
+
+/* ─── Tailoring: select card ─────────────────────────────────── */
+
+.tailor-select-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  max-width: 720px;
+}
+
+.tailor-job-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.tailor-job-preview-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.tailor-job-preview-company {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+
+/* Mode picker: two side-by-side buttons, tonal only */
+.tailor-mode-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.tailor-mode-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  transition: background 120ms ease, border-color 120ms ease;
+  font-family: inherit;
+  color: inherit;
+}
+
+.tailor-mode-card:hover:not(:disabled) {
+  background: var(--surface-raised);
+  border-color: var(--border-strong);
+}
+
+.tailor-mode-card:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.tailor-mode-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+}
+
+.tailor-mode-label {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.tailor-mode-desc {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+
+/* ─── Tailoring: review layout ───────────────────────────────── */
+
+.tailor-review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Summary bar: counts + bulk actions */
+.tailor-summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.tailor-summary-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.tailor-stat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.tailor-stat-num {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.tailor-stat-num--accepted {
+  color: var(--status-offer);
+}
+
+.tailor-stat-num--pending {
+  color: var(--text-secondary);
+}
+
+.tailor-stat-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.tailor-stat-divider {
+  width: 1px;
+  height: 14px;
+  background: var(--border);
+}
+
+.tailor-summary-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Tab count pill */
+.tailor-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  background: var(--surface-sunken);
+  border-radius: 999px;
+}
+
+.filter-tab.active .tailor-tab-count {
+  color: var(--accent-text);
+  background: var(--accent-subtle);
+}
+
+/* ─── Tailoring: suggestions list ────────────────────────────── */
+
+.tailor-suggestions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+}
+
+/* ─── Suggestion card ────────────────────────────────────────── */
+
+.suggestion-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+  transition: background 120ms ease, border-color 120ms ease;
+}
+
+.suggestion-card--accepted {
+  background: oklch(97% 0.02 145);
+  border-color: oklch(85% 0.05 145);
+}
+
+.suggestion-card--rejected {
+  background: var(--surface-sunken);
+  opacity: 0.7;
+}
+
+.suggestion-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-sunken);
+}
+
+.suggestion-card--accepted .suggestion-card-header {
+  background: oklch(95% 0.03 145);
+  border-color: oklch(85% 0.05 145);
+}
+
+.suggestion-card--rejected .suggestion-card-header {
+  background: transparent;
+}
+
+.suggestion-section-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  text-transform: capitalize;
+  letter-spacing: -0.005em;
+}
+
+.suggestion-decision-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.suggestion-btn {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+
+.suggestion-btn:hover {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.suggestion-btn--accept:hover {
+  background: oklch(95% 0.04 145);
+  border-color: oklch(82% 0.06 145);
+  color: var(--status-offer);
+}
+
+.suggestion-btn--reject:hover {
+  background: oklch(97% 0.02 25);
+  border-color: oklch(88% 0.04 25);
+  color: var(--status-rejected);
+}
+
+/* Card body: stacked diff rows */
+.suggestion-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.suggestion-diff-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.suggestion-diff-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.suggestion-original {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  text-decoration: line-through;
+  text-decoration-color: var(--border-strong);
+  text-decoration-thickness: 1px;
+}
+
+.suggestion-suggested {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-primary);
+}
+
+.suggestion-suggested--accepted {
+  color: var(--status-offer);
+}
+
+.suggestion-edit-area {
+  margin-top: 2px;
+}
+
+.suggestion-rationale {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  font-style: italic;
+}
+
+.suggestion-evidence-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.suggestion-evidence-item {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}
+
+.suggestion-evidence-section {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+.suggestion-evidence-text {
+  color: var(--text-secondary);
+}
+
+/* ─── Tailoring: gap notes ──────────────────────────────────── */
+
+.tailor-gap-notes {
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.tailor-gap-notes-heading {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.005em;
+}
+
+.tailor-gap-notes-desc {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  max-width: 65ch;
+}
+
+.tailor-gap-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+
+.tailor-gap-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.tailor-gap-keyword {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+.tailor-gap-reason {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ─── Tailoring: keywords tab ───────────────────────────────── */
+
+.tailor-keywords {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+}
+
+.tailor-kw-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.tailor-kw-group-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.tailor-kw-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tailor-kw-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 450;
+  border: 1px solid transparent;
+}
+
+.tailor-kw-tag--supported {
+  background: oklch(95% 0.04 145);
+  color: var(--status-offer);
+  border-color: oklch(87% 0.06 145);
+}
+
+.tailor-kw-tag--missing {
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  border-color: var(--border);
+  text-decoration: line-through;
+  text-decoration-color: var(--border-strong);
+}
+
+.tailor-kw-tag--reorder {
+  background: oklch(95% 0.04 200);
+  color: var(--status-interview);
+  border-color: oklch(87% 0.06 200);
+}
+
+/* ─── Tailoring: save bar ────────────────────────────────────── */
+
+.tailor-save-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  margin-top: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.tailor-save-actions {
+  display: flex;
+  gap: var(--space-2);
+  padding-bottom: 1px;
+}
+
+/* ─── Tailoring: manual edit ────────────────────────────────── */
+
+.tailor-manual {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.tailor-manual-intro {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  max-width: 65ch;
+}
+
+/* ─── Tailoring: saved confirmation ─────────────────────────── */
+
+.tailor-saved {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-6);
+  border: 1px solid oklch(85% 0.05 145);
+  border-radius: var(--radius-lg);
+  background: oklch(97% 0.02 145);
+}
+
+.tailor-saved-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: oklch(92% 0.06 145);
+  color: var(--status-offer);
+  flex-shrink: 0;
+}
+
+.tailor-saved-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tailor-saved-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+}
+
+.tailor-saved-meta {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+
+.tailor-saved-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* ─── Tailoring: responsive ─────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .tailor-mode-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tailor-summary-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .tailor-save-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .tailor-saved {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

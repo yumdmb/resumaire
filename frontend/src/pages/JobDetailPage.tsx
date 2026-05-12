@@ -190,9 +190,12 @@ export function JobDetailPage() {
           >
             {isDeleting ? 'Deleting' : 'Delete'}
           </button>
-          <button type="button" className="btn btn-primary">
+          <Link
+            to={`/tailor?jobId=${job.id}`}
+            className="btn btn-primary"
+          >
             Tailor resume
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -215,7 +218,7 @@ export function JobDetailPage() {
             <div className="card-header">
               <span className="card-title">Tailored versions</span>
               <Link
-                to="/tailor"
+                to={`/tailor?jobId=${job.id}`}
                 className="btn btn-secondary"
                 style={{ fontSize: 12, padding: '4px 10px' }}
               >
