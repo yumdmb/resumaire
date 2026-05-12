@@ -28,6 +28,7 @@ public static class EndpointRouteBuilderExtensions
 
         endpoints.MapJobsEndpoints();
         endpoints.MapBaseResumeEndpoints();
+        endpoints.MapTailoringEndpoints();
 
         return endpoints;
     }

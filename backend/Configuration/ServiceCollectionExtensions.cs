@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Resumaire.Api.Data;
 using Resumaire.Api.Infrastructure.Health;
+using Resumaire.Api.Tailoring;
 
 namespace Resumaire.Api.Configuration;
 
@@ -73,6 +74,8 @@ public static class ServiceCollectionExtensions
 
         services.AddProblemDetails();
         services.AddOpenApi();
+        services.AddScoped<IJobKeywordExtractor, JobKeywordExtractor>();
+        services.AddScoped<IResumeKeywordComparer, ResumeKeywordComparer>();
 
         services.AddCors(options =>
         {
