@@ -61,6 +61,28 @@ function clearToken(): void {
   }
 }
 
+function readAuthToken(payload: unknown): string {
+  if (!payload || typeof payload !== 'object') {
+    return ''
+  }
+
+  const record = payload as Record<string, unknown>
+  const data = record.data
+
+  if (data && typeof data === 'object') {
+    const envelope = data as Record<string, unknown>
+    const token = envelope.token ?? envelope.accessToken
+
+    if (typeof token === 'string') {
+      return token
+    }
+  }
+
+  const token = record.token ?? record.accessToken
+
+  return typeof token === 'string' ? token : ''
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(() => !!getStoredToken())
@@ -140,8 +162,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       )
     }
 
-    const envelope = await res.json()
-    const token: string = envelope.data?.token ?? envelope.data?.accessToken ?? ''
+    const payload = await res.json()
+    const token = readAuthToken(payload)
     if (!token) throw new AuthError('No token received', 500)
 
     storeToken(token)
@@ -161,13 +183,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new AuthError(detail, res.status, problem?.errors)
     }
 
-    const envelope = await res.json()
-    const token: string = envelope.data?.token ?? envelope.data?.accessToken ?? ''
-    if (!token) throw new AuthError('No token received', 500)
-
-    storeToken(token)
-    setUser({ email })
-  }, [])
+    await login(email, password)
+  }, [login])
 
   const value = useMemo<AuthContextValue>(
     () => ({ user, isLoading, login, register, logout }),
