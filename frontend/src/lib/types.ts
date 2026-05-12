@@ -1,5 +1,140 @@
 // Shared types for the frontend. Mirrors backend DTOs in
-// backend/Endpoints/JobsEndpoints.cs.
+// backend/Endpoints/JobsEndpoints.cs and backend/Contracts/ResumeContentDto.cs.
+
+// ─── Resume types ─────────────────────────────────────────────
+
+export interface ResumePersonalInfo {
+  fullName: string | null
+  email: string | null
+  phone: string | null
+  location: string | null
+  headline: string | null
+  website: string | null
+}
+
+export interface ResumeExperience {
+  id: string | null
+  role: string | null
+  organization: string | null
+  location: string | null
+  startDate: string | null
+  endDate: string | null
+  isCurrent: boolean
+  bullets: string[]
+}
+
+export interface ResumeEducation {
+  id: string | null
+  institution: string | null
+  degree: string | null
+  field: string | null
+  location: string | null
+  startDate: string | null
+  endDate: string | null
+  details: string[]
+}
+
+export interface ResumeCertification {
+  id: string | null
+  name: string | null
+  issuer: string | null
+  issuedDate: string | null
+  expirationDate: string | null
+  credentialId: string | null
+  url: string | null
+}
+
+export interface ResumeLink {
+  id: string | null
+  label: string | null
+  url: string | null
+}
+
+export interface ResumeContent {
+  personalInfo: ResumePersonalInfo | null
+  summary: string | null
+  skills: string[]
+  experience: ResumeExperience[]
+  education: ResumeEducation[]
+  certifications: ResumeCertification[]
+  links: ResumeLink[]
+}
+
+export interface BaseResumeResponse {
+  id: string
+  schemaVersion: number
+  revision: number
+  content: ResumeContent
+  createdAt: string
+  updatedAt: string
+}
+
+export function emptyResumeContent(): ResumeContent {
+  return {
+    personalInfo: {
+      fullName: null,
+      email: null,
+      phone: null,
+      location: null,
+      headline: null,
+      website: null,
+    },
+    summary: null,
+    skills: [],
+    experience: [],
+    education: [],
+    certifications: [],
+    links: [],
+  }
+}
+
+export function emptyExperience(): ResumeExperience {
+  return {
+    id: crypto.randomUUID(),
+    role: null,
+    organization: null,
+    location: null,
+    startDate: null,
+    endDate: null,
+    isCurrent: false,
+    bullets: [],
+  }
+}
+
+export function emptyEducation(): ResumeEducation {
+  return {
+    id: crypto.randomUUID(),
+    institution: null,
+    degree: null,
+    field: null,
+    location: null,
+    startDate: null,
+    endDate: null,
+    details: [],
+  }
+}
+
+export function emptyCertification(): ResumeCertification {
+  return {
+    id: crypto.randomUUID(),
+    name: null,
+    issuer: null,
+    issuedDate: null,
+    expirationDate: null,
+    credentialId: null,
+    url: null,
+  }
+}
+
+export function emptyLink(): ResumeLink {
+  return {
+    id: crypto.randomUUID(),
+    label: null,
+    url: null,
+  }
+}
+
+// ─── Job types ────────────────────────────────────────────────
 
 export const JOB_STATUSES = [
   'Saved',

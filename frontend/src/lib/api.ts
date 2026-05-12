@@ -1,10 +1,12 @@
 import { frontendEnv } from './env'
 import type {
+  BaseResumeResponse,
   FieldErrors,
   JobDetail,
   JobFormValues,
   JobStatus,
   JobSummary,
+  ResumeContent,
 } from './types'
 
 const AUTH_TOKEN_KEY = 'resumaire:accessToken'
@@ -167,5 +169,25 @@ export const jobsApi = {
 
   async delete(jobId: string): Promise<void> {
     await request(`/api/jobs/${jobId}`, { method: 'DELETE' })
+  },
+}
+
+export const resumeApi = {
+  async get(): Promise<BaseResumeResponse | null> {
+    try {
+      return await request<BaseResumeResponse>('/api/resume/base')
+    } catch (error) {
+      if (error instanceof ApiError && error.isNotFound) return null
+      throw error
+    }
+  },
+
+  async save(content: ResumeContent): Promise<BaseResumeResponse> {
+    const saved = await request<BaseResumeResponse>('/api/resume/base', {
+      method: 'PUT',
+      body: JSON.stringify({ content }),
+    })
+    if (!saved) throw new ApiError('Empty response from save', 500)
+    return saved
   },
 }
