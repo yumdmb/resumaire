@@ -3,18 +3,11 @@ import { useEffect, useState } from 'react'
 import { ApiError, jobsApi } from '../lib/api'
 import { formatShortDate } from '../lib/format'
 import { JOB_STATUSES, type JobStatus, type JobSummary } from '../lib/types'
+import { StatusDropdown } from '../components/StatusDropdown'
 
 type StatusFilter = JobStatus | 'All'
 
 const FILTERS: StatusFilter[] = ['All', ...JOB_STATUSES]
-
-const BADGE_CLASS: Record<JobStatus, string> = {
-  Saved: 'badge badge-saved',
-  Applied: 'badge badge-applied',
-  Interview: 'badge badge-interview',
-  Offer: 'badge badge-offer',
-  Rejected: 'badge badge-rejected',
-}
 
 type LoadState =
   | { status: 'loading' }
@@ -25,6 +18,7 @@ export function DashboardPage() {
   const [activeFilter, setActiveFilter] = useState<StatusFilter>('All')
   const [reloadToken, setReloadToken] = useState(0)
   const [state, setState] = useState<LoadState>({ status: 'loading' })
+  const [patchingJobs, setPatchingJobs] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     let cancelled = false
@@ -53,6 +47,33 @@ export function DashboardPage() {
   function handleRetry() {
     setState({ status: 'loading' })
     setReloadToken((token) => token + 1)
+  }
+
+  async function handleStatusChange(jobId: string, newStatus: JobStatus) {
+    if (state.status !== 'ready') return
+
+    const previousJobs = state.jobs
+    // Optimistic update
+    setState({
+      status: 'ready',
+      jobs: state.jobs.map((j) =>
+        j.id === jobId ? { ...j, status: newStatus } : j,
+      ),
+    })
+    setPatchingJobs((prev) => new Set(prev).add(jobId))
+
+    try {
+      await jobsApi.patchStatus(jobId, newStatus)
+    } catch {
+      // Revert on failure
+      setState({ status: 'ready', jobs: previousJobs })
+    } finally {
+      setPatchingJobs((prev) => {
+        const next = new Set(prev)
+        next.delete(jobId)
+        return next
+      })
+    }
   }
 
   const jobs = state.status === 'ready' ? state.jobs : []
@@ -136,7 +157,11 @@ export function DashboardPage() {
                 <div className="job-row-title">{job.title}</div>
                 <div className="job-row-company">{job.company}</div>
               </div>
-              <span className={BADGE_CLASS[job.status]}>{job.status}</span>
+              <StatusDropdown
+                value={job.status}
+                onChange={(newStatus) => handleStatusChange(job.id, newStatus)}
+                disabled={patchingJobs.has(job.id)}
+              />
               <span className="job-row-date">
                 {formatShortDate(job.dateApplied ?? job.updatedAt)}
               </span>

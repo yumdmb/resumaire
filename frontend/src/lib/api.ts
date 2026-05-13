@@ -173,6 +173,15 @@ export const jobsApi = {
   async delete(jobId: string): Promise<void> {
     await request(`/api/jobs/${jobId}`, { method: 'DELETE' })
   },
+
+  async patchStatus(jobId: string, status: JobStatus): Promise<JobSummary> {
+    const updated = await request<JobSummary>(`/api/jobs/${jobId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    })
+    if (!updated) throw new ApiError('Empty response from patch status', 500)
+    return updated
+  },
 }
 
 export const resumeApi = {

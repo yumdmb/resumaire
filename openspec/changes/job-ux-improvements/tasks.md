@@ -5,21 +5,21 @@
 
 ## 2. Frontend: StatusDropdown Component
 
-- [ ] 2.1 Create a reusable `StatusDropdown` component that renders the current status badge as a clickable trigger, shows a positioned dropdown with all statuses, and fires an `onChange` callback on selection
-- [ ] 2.2 Add click-outside-to-close and keyboard escape handling to the dropdown
-- [ ] 2.3 Add CSS for the status dropdown (positioned below the badge, matches existing design tokens)
+- [x] 2.1 Create a reusable `StatusDropdown` component that renders the current status badge as a clickable trigger, shows a positioned dropdown with all statuses, and fires an `onChange` callback on selection
+- [x] 2.2 Add click-outside-to-close and keyboard escape handling to the dropdown
+- [x] 2.3 Add CSS for the status dropdown (positioned below the badge, matches existing design tokens)
 
 ## 3. Frontend: Inline Status on Dashboard
 
-- [ ] 3.1 Add `patchJobStatus(jobId, status)` function to the frontend API client
-- [ ] 3.2 Replace the static badge in `DashboardPage` job rows with the `StatusDropdown` component
-- [ ] 3.3 Wire the dropdown to call `patchJobStatus`, update local state optimistically, and revert on error
-- [ ] 3.4 Ensure clicking the status badge does not trigger row navigation (`stopPropagation`)
+- [x] 3.1 Add `patchJobStatus(jobId, status)` function to the frontend API client
+- [x] 3.2 Replace the static badge in `DashboardPage` job rows with the `StatusDropdown` component
+- [x] 3.3 Wire the dropdown to call `patchJobStatus`, update local state optimistically, and revert on error
+- [x] 3.4 Ensure clicking the status badge does not trigger row navigation (`stopPropagation`)
 
 ## 4. Frontend: Inline Status on Job Detail
 
-- [ ] 4.1 Replace the static status badge in the job detail sidebar with the `StatusDropdown` component
-- [ ] 4.2 Wire the dropdown to call `patchJobStatus` and update the local job state
+- [x] 4.1 Replace the static status badge in the job detail sidebar with the `StatusDropdown` component
+- [x] 4.2 Wire the dropdown to call `patchJobStatus` and update the local job state
 
 ## 5. Frontend: Version Row Actions
 

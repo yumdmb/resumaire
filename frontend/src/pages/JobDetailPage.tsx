@@ -3,14 +3,7 @@ import { useEffect, useState } from 'react'
 import { ApiError, jobsApi } from '../lib/api'
 import { formatLongDate } from '../lib/format'
 import type { JobDetail, JobStatus } from '../lib/types'
-
-const BADGE_CLASS: Record<JobStatus, string> = {
-  Saved: 'badge badge-saved',
-  Applied: 'badge badge-applied',
-  Interview: 'badge badge-interview',
-  Offer: 'badge badge-offer',
-  Rejected: 'badge badge-rejected',
-}
+import { StatusDropdown } from '../components/StatusDropdown'
 
 type LoadState =
   | { status: 'loading' }
@@ -24,6 +17,7 @@ export function JobDetailPage() {
   const [reloadToken, setReloadToken] = useState(0)
   const [state, setState] = useState<LoadState>({ status: 'loading' })
   const [isDeleting, setIsDeleting] = useState(false)
+  const [isPatchingStatus, setIsPatchingStatus] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -79,6 +73,24 @@ export function JobDetailPage() {
       const message =
         error instanceof Error ? error.message : 'Could not delete this job'
       window.alert(message)
+    }
+  }
+
+  async function handleStatusChange(newStatus: JobStatus) {
+    if (state.status !== 'ready') return
+
+    const previousJob = state.job
+    // Optimistic update
+    setState({ status: 'ready', job: { ...state.job, status: newStatus } })
+    setIsPatchingStatus(true)
+
+    try {
+      await jobsApi.patchStatus(state.job.id, newStatus)
+    } catch {
+      // Revert on failure
+      setState({ status: 'ready', job: previousJob })
+    } finally {
+      setIsPatchingStatus(false)
     }
   }
 
@@ -178,7 +190,11 @@ export function JobDetailPage() {
           <p className="page-subtitle">{job.company}</p>
         </div>
         <div className="page-actions">
-          <span className={BADGE_CLASS[status]}>{status}</span>
+          <StatusDropdown
+            value={status}
+            onChange={handleStatusChange}
+            disabled={isPatchingStatus}
+          />
           <Link to={`/jobs/${job.id}/edit`} className="btn btn-secondary">
             Edit
           </Link>
@@ -263,7 +279,11 @@ export function JobDetailPage() {
               <div className="meta-list">
                 <div className="meta-row">
                   <span className="meta-label">Status</span>
-                  <span className={BADGE_CLASS[status]}>{status}</span>
+                  <StatusDropdown
+                    value={status}
+                    onChange={handleStatusChange}
+                    disabled={isPatchingStatus}
+                  />
                 </div>
                 <div className="meta-row">
                   <span className="meta-label">Added</span>

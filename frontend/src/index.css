@@ -1938,3 +1938,57 @@ code {
   background: oklch(96% 0.04 60);
   border: 1px solid oklch(85% 0.06 60);
 }
+
+/* ─── Status dropdown ────────────────────────────────────────── */
+
+.status-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+
+.status-dropdown-trigger {
+  cursor: pointer;
+  background: none;
+  font: inherit;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.status-dropdown-trigger:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.status-dropdown-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  min-width: 140px;
+  padding: var(--space-1);
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px oklch(20% 0.01 250 / 0.08), 0 1px 3px oklch(20% 0.01 250 / 0.06);
+}
+
+.status-dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 100ms ease;
+}
+
+.status-dropdown-item:hover {
+  background: var(--surface-sunken);
+}
+
+.status-dropdown-item--active {
+  background: var(--surface-sunken);
+}
