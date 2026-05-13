@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { resumeApi } from '../lib/api'
 import type { ResumeContent } from '../lib/types'
 import { emptyResumeContent } from '../lib/types'
@@ -80,7 +81,7 @@ export function ResumeBuilderPage() {
   if (loadState.status === 'loading') {
     return (
       <div className="page" aria-busy="true">
-        <PageHeader isSaving={false} onSave={handleSave} />
+        <PageHeader isSaving={false} onSave={handleSave} hasUnsavedChanges={false} />
         <div className="section-list">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="section-row" aria-hidden="true">
@@ -96,7 +97,7 @@ export function ResumeBuilderPage() {
   if (loadState.status === 'error') {
     return (
       <div className="page">
-        <PageHeader isSaving={false} onSave={handleSave} />
+        <PageHeader isSaving={false} onSave={handleSave} hasUnsavedChanges={false} />
         <div className="empty-state">
           <p className="empty-state-title">Could not load resume</p>
           <p className="empty-state-body">{loadState.message}</p>
@@ -108,9 +109,17 @@ export function ResumeBuilderPage() {
     )
   }
 
+  const hasUnsavedChanges = JSON.stringify(content) !== JSON.stringify(serverContent.current)
+
   return (
     <div className="page">
-      <PageHeader isSaving={isSaving} onSave={handleSave} lastSaved={lastSaved} />
+      <PageHeader isSaving={isSaving} onSave={handleSave} lastSaved={lastSaved} hasUnsavedChanges={hasUnsavedChanges} />
+
+      {hasUnsavedChanges && (
+        <div className="preview-unsaved-notice" role="status">
+          You have unsaved changes. Preview and export use the last saved version.
+        </div>
+      )}
 
       {saveError && (
         <div className="form-alert" role="alert" style={{ marginBottom: 16 }}>
@@ -168,10 +177,12 @@ function PageHeader({
   isSaving,
   onSave,
   lastSaved,
+  hasUnsavedChanges,
 }: {
   isSaving: boolean
   onSave: () => void
   lastSaved?: string | null
+  hasUnsavedChanges: boolean
 }) {
   return (
     <div className="page-header">
@@ -193,6 +204,15 @@ function PageHeader({
         </p>
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
+        {lastSaved && (
+          <Link
+            to="/resume/preview"
+            className="btn btn-secondary"
+            title={hasUnsavedChanges ? 'Preview shows last saved version' : undefined}
+          >
+            Preview
+          </Link>
+        )}
         <button
           type="button"
           className="btn btn-primary"

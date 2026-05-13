@@ -8,6 +8,7 @@ import { LandingPage } from './pages/LandingPage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
 import { ResumeBuilderPage } from './pages/ResumeBuilderPage'
+import { ResumePreviewPage } from './pages/ResumePreviewPage'
 import { TailoringPage } from './pages/TailoringPage'
 
 const nav = [
@@ -89,6 +90,8 @@ function AppShell() {
           <Route path="jobs/:jobId" element={<JobDetailPage />} />
           <Route path="jobs/:jobId/edit" element={<JobFormPage mode="edit" />} />
           <Route path="resume" element={<ResumeBuilderPage />} />
+          <Route path="resume/preview" element={<ResumePreviewPage />} />
+          <Route path="resume/preview/:tailoredResumeId" element={<ResumePreviewPage />} />
           <Route path="tailor" element={<TailoringPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

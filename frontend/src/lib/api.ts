@@ -195,6 +195,60 @@ export const resumeApi = {
   },
 }
 
+export const exportApi = {
+  async previewBase(): Promise<string> {
+    const url = `${frontendEnv.apiBaseUrl}/api/export/base/preview`
+    const token = getAccessToken()
+    const headers: HeadersInit = { Accept: 'text/html' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
+    const response = await fetch(url, { headers })
+    if (!response.ok) {
+      throw new ApiError(response.statusText || 'Preview failed', response.status)
+    }
+    return response.text()
+  },
+
+  async previewTailored(tailoredResumeId: string): Promise<string> {
+    const url = `${frontendEnv.apiBaseUrl}/api/export/tailored/${tailoredResumeId}/preview`
+    const token = getAccessToken()
+    const headers: HeadersInit = { Accept: 'text/html' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
+    const response = await fetch(url, { headers })
+    if (!response.ok) {
+      throw new ApiError(response.statusText || 'Preview failed', response.status)
+    }
+    return response.text()
+  },
+
+  async exportBasePdf(): Promise<Blob> {
+    const url = `${frontendEnv.apiBaseUrl}/api/export/base/pdf`
+    const token = getAccessToken()
+    const headers: HeadersInit = { Accept: 'application/pdf' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
+    const response = await fetch(url, { headers })
+    if (!response.ok) {
+      throw new ApiError(response.statusText || 'Export failed', response.status)
+    }
+    return response.blob()
+  },
+
+  async exportTailoredPdf(tailoredResumeId: string): Promise<Blob> {
+    const url = `${frontendEnv.apiBaseUrl}/api/export/tailored/${tailoredResumeId}/pdf`
+    const token = getAccessToken()
+    const headers: HeadersInit = { Accept: 'application/pdf' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
+    const response = await fetch(url, { headers })
+    if (!response.ok) {
+      throw new ApiError(response.statusText || 'Export failed', response.status)
+    }
+    return response.blob()
+  },
+}
+
 export const tailoringApi = {
   async analyze(jobId: string): Promise<TailoringAnalysis> {
     const result = await request<TailoringAnalysis>(

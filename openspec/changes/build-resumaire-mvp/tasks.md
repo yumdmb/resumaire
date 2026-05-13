@@ -63,11 +63,11 @@
 
 ## 8. Resume Preview And PDF Export
 
-- [ ] 8.1 Implement backend HTML rendering from saved structured resume content
-- [ ] 8.2 Build frontend resume preview for base and tailored resume versions
-- [ ] 8.3 Integrate server-side PDF rendering from saved resume HTML
-- [ ] 8.4 Implement protected PDF export endpoint for owned resume versions
-- [ ] 8.5 Ensure export excludes rejected or unaccepted suggestions and handles unsaved editor changes clearly
+- [x] 8.1 Implement backend HTML rendering from saved structured resume content
+- [x] 8.2 Build frontend resume preview for base and tailored resume versions
+- [x] 8.3 Integrate server-side PDF rendering from saved resume HTML
+- [x] 8.4 Implement protected PDF export endpoint for owned resume versions
+- [x] 8.5 Ensure export excludes rejected or unaccepted suggestions and handles unsaved editor changes clearly
 - [ ] 8.6 Add tests for preview rendering, export ownership, and export source integrity
 
 ## 9. End-To-End Verification
