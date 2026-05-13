@@ -182,6 +182,29 @@ export const jobsApi = {
     if (!updated) throw new ApiError('Empty response from patch status', 500)
     return updated
   },
+
+  async attachTailoredResume(
+    jobId: string,
+    job: JobDetail,
+    selectedTailoredResumeId: string | null,
+  ): Promise<JobDetail> {
+    const updated = await request<JobDetail>(`/api/jobs/${jobId}`, {
+      method: 'PUT',
+      body: JSON.stringify({
+        company: job.company,
+        title: job.title,
+        link: job.link,
+        description: job.description,
+        status: job.status,
+        dateApplied: job.dateApplied,
+        notes: job.notes,
+        selectedBaseResumeId: job.selectedBaseResumeId,
+        selectedTailoredResumeId,
+      }),
+    })
+    if (!updated) throw new ApiError('Empty response from update', 500)
+    return updated
+  },
 }
 
 export const resumeApi = {

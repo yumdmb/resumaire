@@ -18,6 +18,8 @@ interface StatusDropdownProps {
 export function StatusDropdown({ value, onChange, disabled }: StatusDropdownProps) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -46,6 +48,10 @@ export function StatusDropdown({ value, onChange, disabled }: StatusDropdownProp
     e.preventDefault()
     e.stopPropagation()
     if (!disabled) {
+      if (!open && triggerRef.current) {
+        const rect = triggerRef.current.getBoundingClientRect()
+        setMenuPos({ top: rect.bottom + 4, left: rect.left })
+      }
       setOpen((prev) => !prev)
     }
   }
@@ -60,6 +66,7 @@ export function StatusDropdown({ value, onChange, disabled }: StatusDropdownProp
   return (
     <div className="status-dropdown" ref={containerRef}>
       <button
+        ref={triggerRef}
         type="button"
         className={`status-dropdown-trigger ${BADGE_CLASS[value]}`}
         onClick={handleTriggerClick}
@@ -70,8 +77,13 @@ export function StatusDropdown({ value, onChange, disabled }: StatusDropdownProp
       >
         {value}
       </button>
-      {open && (
-        <ul className="status-dropdown-menu" role="listbox" aria-label="Select status">
+      {open && menuPos && (
+        <ul
+          className="status-dropdown-menu"
+          role="listbox"
+          aria-label="Select status"
+          style={{ position: 'fixed', top: menuPos.top, left: menuPos.left }}
+        >
           {JOB_STATUSES.map((status) => (
             <li
               key={status}

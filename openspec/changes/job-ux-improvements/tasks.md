@@ -23,14 +23,14 @@
 
 ## 5. Frontend: Version Row Actions
 
-- [ ] 5.1 Add "Preview" link button to each tailored resume version row that navigates to `/resume/preview/{versionId}?jobId={jobId}`
-- [ ] 5.2 Add "Export PDF" button to each tailored resume version row that triggers a direct PDF download
-- [ ] 5.3 Add loading/disabled state to the export button while download is in progress
+- [x] 5.1 Add "Preview" link button to each tailored resume version row that navigates to `/resume/preview/{versionId}?jobId={jobId}`
+- [x] 5.2 Add "Export PDF" button to each tailored resume version row that triggers a direct PDF download
+- [x] 5.3 Add loading/disabled state to the export button while download is in progress
 
 ## 6. Frontend: Job Resume Attachment
 
-- [ ] 6.1 Add "Use for application" button to each version row (hidden if already selected)
-- [ ] 6.2 Wire the button to call the existing job PUT endpoint with `selectedTailoredResumeId` set to the chosen version
-- [ ] 6.3 Show a "Selected" indicator on the currently attached version row
-- [ ] 6.4 Add an "Attached resume" section to the job detail sidebar showing the selected version name with Preview and Export PDF links
-- [ ] 6.5 Show a placeholder in the sidebar section when no version is attached
+- [x] 6.1 Add "Use for application" button to each version row (hidden if already selected)
+- [x] 6.2 Wire the button to call the existing job PUT endpoint with `selectedTailoredResumeId` set to the chosen version
+- [x] 6.3 Show a "Selected" indicator on the currently attached version row
+- [x] 6.4 Add an "Attached resume" section to the job detail sidebar showing the selected version name with Preview and Export PDF links
+- [x] 6.5 Show a placeholder in the sidebar section when no version is attached

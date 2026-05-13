@@ -1,8 +1,8 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { ApiError, jobsApi } from '../lib/api'
+import { ApiError, exportApi, jobsApi } from '../lib/api'
 import { formatLongDate } from '../lib/format'
-import type { JobDetail, JobStatus } from '../lib/types'
+import type { JobDetail, JobStatus, TailoredResumeVersion } from '../lib/types'
 import { StatusDropdown } from '../components/StatusDropdown'
 
 type LoadState =
@@ -18,6 +18,8 @@ export function JobDetailPage() {
   const [state, setState] = useState<LoadState>({ status: 'loading' })
   const [isDeleting, setIsDeleting] = useState(false)
   const [isPatchingStatus, setIsPatchingStatus] = useState(false)
+  const [exportingVersions, setExportingVersions] = useState<Set<string>>(new Set())
+  const [attachingVersion, setAttachingVersion] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -80,17 +82,57 @@ export function JobDetailPage() {
     if (state.status !== 'ready') return
 
     const previousJob = state.job
-    // Optimistic update
     setState({ status: 'ready', job: { ...state.job, status: newStatus } })
     setIsPatchingStatus(true)
 
     try {
       await jobsApi.patchStatus(state.job.id, newStatus)
     } catch {
-      // Revert on failure
       setState({ status: 'ready', job: previousJob })
     } finally {
       setIsPatchingStatus(false)
+    }
+  }
+
+  async function handleExportPdf(versionId: string) {
+    setExportingVersions((prev) => new Set(prev).add(versionId))
+    try {
+      const blob = await exportApi.exportTailoredPdf(versionId)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `resume-${versionId}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    } catch {
+      // Silently fail; user can retry
+    } finally {
+      setExportingVersions((prev) => {
+        const next = new Set(prev)
+        next.delete(versionId)
+        return next
+      })
+    }
+  }
+
+  async function handleAttachVersion(versionId: string) {
+    if (state.status !== 'ready') return
+
+    const previousJob = state.job
+    setState({
+      status: 'ready',
+      job: { ...state.job, selectedTailoredResumeId: versionId },
+    })
+    setAttachingVersion(versionId)
+
+    try {
+      await jobsApi.attachTailoredResume(state.job.id, state.job, versionId)
+    } catch {
+      setState({ status: 'ready', job: previousJob })
+    } finally {
+      setAttachingVersion(null)
     }
   }
 
@@ -176,6 +218,9 @@ export function JobDetailPage() {
 
   const { job } = state
   const status = job.status
+  const selectedVersion = job.tailoredResumeVersions.find(
+    (v) => v.id === job.selectedTailoredResumeId,
+  )
 
   return (
     <div className="page">
@@ -252,17 +297,16 @@ export function JobDetailPage() {
               ) : (
                 <ul className="version-list">
                   {job.tailoredResumeVersions.map((version) => (
-                    <li key={version.id} className="version-row">
-                      <div>
-                        <div className="version-name">
-                          {version.name ?? `Version ${version.versionNumber}`}
-                        </div>
-                        <div className="version-meta">
-                          v{version.versionNumber} · saved{' '}
-                          {formatLongDate(version.createdAt)}
-                        </div>
-                      </div>
-                    </li>
+                    <VersionRow
+                      key={version.id}
+                      version={version}
+                      jobId={job.id}
+                      isSelected={version.id === job.selectedTailoredResumeId}
+                      isExporting={exportingVersions.has(version.id)}
+                      isAttaching={attachingVersion === version.id}
+                      onExport={handleExportPdf}
+                      onAttach={handleAttachVersion}
+                    />
                   ))}
                 </ul>
               )}
@@ -318,6 +362,41 @@ export function JobDetailPage() {
 
           <div className="card">
             <div className="card-header">
+              <span className="card-title">Attached resume</span>
+            </div>
+            <div className="card-body">
+              {selectedVersion ? (
+                <div className="attached-resume">
+                  <div className="attached-resume-name">
+                    {selectedVersion.name ?? `Version ${selectedVersion.versionNumber}`}
+                  </div>
+                  <div className="attached-resume-actions">
+                    <Link
+                      to={`/resume/preview/${selectedVersion.id}?jobId=${job.id}`}
+                      className="btn btn-secondary"
+                      style={{ fontSize: 12, padding: '4px 10px' }}
+                    >
+                      Preview
+                    </Link>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ fontSize: 12, padding: '4px 10px' }}
+                      onClick={() => handleExportPdf(selectedVersion.id)}
+                      disabled={exportingVersions.has(selectedVersion.id)}
+                    >
+                      {exportingVersions.has(selectedVersion.id) ? 'Exporting' : 'Export PDF'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <p className="prose-muted">No version attached to this application.</p>
+              )}
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-header">
               <span className="card-title">Notes</span>
             </div>
             <div className="card-body">
@@ -331,5 +410,68 @@ export function JobDetailPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+interface VersionRowProps {
+  version: TailoredResumeVersion
+  jobId: string
+  isSelected: boolean
+  isExporting: boolean
+  isAttaching: boolean
+  onExport: (versionId: string) => void
+  onAttach: (versionId: string) => void
+}
+
+function VersionRow({
+  version,
+  jobId,
+  isSelected,
+  isExporting,
+  isAttaching,
+  onExport,
+  onAttach,
+}: VersionRowProps) {
+  return (
+    <li className="version-row">
+      <div>
+        <div className="version-name">
+          {version.name ?? `Version ${version.versionNumber}`}
+          {isSelected && <span className="version-selected-indicator">Selected</span>}
+        </div>
+        <div className="version-meta">
+          v{version.versionNumber} · saved {formatLongDate(version.createdAt)}
+        </div>
+      </div>
+      <div className="version-actions">
+        <Link
+          to={`/resume/preview/${version.id}?jobId=${jobId}`}
+          className="btn btn-secondary"
+          style={{ fontSize: 12, padding: '4px 10px' }}
+        >
+          Preview
+        </Link>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          style={{ fontSize: 12, padding: '4px 10px' }}
+          onClick={() => onExport(version.id)}
+          disabled={isExporting}
+        >
+          {isExporting ? 'Exporting' : 'Export PDF'}
+        </button>
+        {!isSelected && (
+          <button
+            type="button"
+            className="btn btn-secondary"
+            style={{ fontSize: 12, padding: '4px 10px' }}
+            onClick={() => onAttach(version.id)}
+            disabled={isAttaching}
+          >
+            {isAttaching ? 'Attaching' : 'Use for application'}
+          </button>
+        )}
+      </div>
+    </li>
   )
 }
