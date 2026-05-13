@@ -1,67 +1,152 @@
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { ApiError, jobsApi } from '../lib/api'
+import { formatShortDate } from '../lib/format'
+import { JOB_STATUSES, type JobStatus, type JobSummary } from '../lib/types'
+import { StatusDropdown } from '../components/StatusDropdown'
 
-type Status = 'All' | 'Saved' | 'Applied' | 'Interview' | 'Offer' | 'Rejected'
+type StatusFilter = JobStatus | 'All'
 
-const STATUSES: Status[] = ['All', 'Saved', 'Applied', 'Interview', 'Offer', 'Rejected']
+const FILTERS: StatusFilter[] = ['All', ...JOB_STATUSES]
 
-const BADGE_CLASS: Record<Exclude<Status, 'All'>, string> = {
-  Saved: 'badge badge-saved',
-  Applied: 'badge badge-applied',
-  Interview: 'badge badge-interview',
-  Offer: 'badge badge-offer',
-  Rejected: 'badge badge-rejected',
-}
-
-// Placeholder rows — replaced by real data in task 4.1
-const SAMPLE_JOBS = [
-  { id: 'acme-product-engineer', title: 'Product Engineer', company: 'Acme Corp', status: 'Interview' as const, date: 'May 8' },
-  { id: 'nova-frontend-dev', title: 'Frontend Developer', company: 'Nova Labs', status: 'Applied' as const, date: 'May 5' },
-  { id: 'stripe-ux-engineer', title: 'UX Engineer', company: 'Stripe', status: 'Saved' as const, date: 'May 3' },
-  { id: 'linear-software-eng', title: 'Software Engineer', company: 'Linear', status: 'Offer' as const, date: 'Apr 29' },
-  { id: 'vercel-dx-eng', title: 'DX Engineer', company: 'Vercel', status: 'Rejected' as const, date: 'Apr 22' },
-]
+type LoadState =
+  | { status: 'loading' }
+  | { status: 'ready'; jobs: JobSummary[] }
+  | { status: 'error'; message: string }
 
 export function DashboardPage() {
-  const [activeFilter, setActiveFilter] = useState<Status>('All')
+  const [activeFilter, setActiveFilter] = useState<StatusFilter>('All')
+  const [reloadToken, setReloadToken] = useState(0)
+  const [state, setState] = useState<LoadState>({ status: 'loading' })
+  const [patchingJobs, setPatchingJobs] = useState<Set<string>>(new Set())
 
-  const filtered =
-    activeFilter === 'All'
-      ? SAMPLE_JOBS
-      : SAMPLE_JOBS.filter((j) => j.status === activeFilter)
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const jobs = await jobsApi.list(activeFilter)
+        if (cancelled) return
+        setState({ status: 'ready', jobs })
+      } catch (error) {
+        if (cancelled) return
+        const message =
+          error instanceof ApiError ? error.message : 'Could not load jobs'
+        setState({ status: 'error', message })
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [activeFilter, reloadToken])
+
+  function handleFilterChange(next: StatusFilter) {
+    setActiveFilter(next)
+    setState({ status: 'loading' })
+  }
+
+  function handleRetry() {
+    setState({ status: 'loading' })
+    setReloadToken((token) => token + 1)
+  }
+
+  async function handleStatusChange(jobId: string, newStatus: JobStatus) {
+    if (state.status !== 'ready') return
+
+    const previousJobs = state.jobs
+    // Optimistic update
+    setState({
+      status: 'ready',
+      jobs: state.jobs.map((j) =>
+        j.id === jobId ? { ...j, status: newStatus } : j,
+      ),
+    })
+    setPatchingJobs((prev) => new Set(prev).add(jobId))
+
+    try {
+      await jobsApi.patchStatus(jobId, newStatus)
+    } catch {
+      // Revert on failure
+      setState({ status: 'ready', jobs: previousJobs })
+    } finally {
+      setPatchingJobs((prev) => {
+        const next = new Set(prev)
+        next.delete(jobId)
+        return next
+      })
+    }
+  }
+
+  const jobs = state.status === 'ready' ? state.jobs : []
+  const total = state.status === 'ready' ? state.jobs.length : 0
 
   return (
     <div className="page">
       <div className="page-header">
         <div>
           <h1 className="page-title">Jobs</h1>
-          <p className="page-subtitle">{SAMPLE_JOBS.length} applications</p>
+          <p className="page-subtitle">
+            {state.status === 'ready'
+              ? `${total} ${total === 1 ? 'application' : 'applications'}`
+              : state.status === 'loading'
+                ? 'Loading'
+                : ''}
+          </p>
         </div>
-        <button className="btn btn-primary">Add job</button>
+        <Link to="/jobs/new" className="btn btn-primary">
+          Add job
+        </Link>
       </div>
 
       <div className="filter-tabs" role="tablist" aria-label="Filter by status">
-        {STATUSES.map((s) => (
+        {FILTERS.map((filter) => (
           <button
-            key={s}
+            key={filter}
+            type="button"
             role="tab"
-            aria-selected={activeFilter === s}
-            className={`filter-tab${activeFilter === s ? ' active' : ''}`}
-            onClick={() => setActiveFilter(s)}
+            aria-selected={activeFilter === filter}
+            className={`filter-tab${activeFilter === filter ? ' active' : ''}`}
+            onClick={() => handleFilterChange(filter)}
           >
-            {s}
+            {filter}
           </button>
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {state.status === 'loading' ? (
+        <DashboardSkeleton />
+      ) : state.status === 'error' ? (
         <div className="empty-state">
-          <p className="empty-state-title">No {activeFilter.toLowerCase()} jobs</p>
-          <p className="empty-state-body">Jobs you add will appear here once you track them.</p>
+          <p className="empty-state-title">Could not load jobs</p>
+          <p className="empty-state-body">{state.message}</p>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={handleRetry}
+          >
+            Retry
+          </button>
+        </div>
+      ) : jobs.length === 0 ? (
+        <div className="empty-state">
+          <p className="empty-state-title">
+            {activeFilter === 'All'
+              ? 'No jobs yet'
+              : `No ${activeFilter.toLowerCase()} jobs`}
+          </p>
+          <p className="empty-state-body">
+            {activeFilter === 'All'
+              ? 'Add the first role you want to track.'
+              : `Jobs you mark as ${activeFilter} will appear here.`}
+          </p>
+          {activeFilter === 'All' ? (
+            <Link to="/jobs/new" className="btn btn-secondary">
+              Add job
+            </Link>
+          ) : null}
         </div>
       ) : (
         <div className="job-list" role="list">
-          {filtered.map((job) => (
+          {jobs.map((job) => (
             <Link
               key={job.id}
               to={`/jobs/${job.id}`}
@@ -72,12 +157,38 @@ export function DashboardPage() {
                 <div className="job-row-title">{job.title}</div>
                 <div className="job-row-company">{job.company}</div>
               </div>
-              <span className={BADGE_CLASS[job.status]}>{job.status}</span>
-              <span className="job-row-date">{job.date}</span>
+              <StatusDropdown
+                value={job.status}
+                onChange={(newStatus) => handleStatusChange(job.id, newStatus)}
+                disabled={patchingJobs.has(job.id)}
+              />
+              <span className="job-row-date">
+                {formatShortDate(job.dateApplied ?? job.updatedAt)}
+              </span>
             </Link>
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="job-list" aria-busy="true">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div key={index} className="job-row" aria-hidden="true">
+          <div>
+            <div className="skeleton skeleton-line" style={{ width: '42%' }} />
+            <div
+              className="skeleton skeleton-line"
+              style={{ width: '24%', marginTop: 6 }}
+            />
+          </div>
+          <div className="skeleton skeleton-pill" />
+          <div className="skeleton skeleton-line" style={{ width: 40 }} />
+        </div>
+      ))}
     </div>
   )
 }

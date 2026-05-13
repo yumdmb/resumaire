@@ -26,6 +26,11 @@ public static class EndpointRouteBuilderExtensions
             .RequireAuthorization()
             .WithName("GetCurrentUser");
 
+        endpoints.MapJobsEndpoints();
+        endpoints.MapBaseResumeEndpoints();
+        endpoints.MapTailoringEndpoints();
+        endpoints.MapExportEndpoints();
+
         return endpoints;
     }
 }

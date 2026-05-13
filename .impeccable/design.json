@@ -1,0 +1,232 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-12T00:00:00.000Z",
+  "title": "Design System: Resumaire",
+  "extensions": {
+    "colorMeta": {
+      "focused-indigo": {
+        "role": "primary",
+        "displayName": "Focused Indigo",
+        "canonical": "oklch(48% 0.18 264)",
+        "tonalRamp": [
+          "oklch(15% 0.08 264)",
+          "oklch(25% 0.12 264)",
+          "oklch(35% 0.15 264)",
+          "oklch(48% 0.18 264)",
+          "oklch(60% 0.14 264)",
+          "oklch(72% 0.10 264)",
+          "oklch(85% 0.06 264)",
+          "oklch(95% 0.04 264)"
+        ]
+      },
+      "indigo-subtle": {
+        "role": "primary",
+        "displayName": "Indigo Subtle",
+        "canonical": "oklch(95% 0.04 264)",
+        "tonalRamp": [
+          "oklch(15% 0.08 264)",
+          "oklch(25% 0.12 264)",
+          "oklch(35% 0.15 264)",
+          "oklch(48% 0.18 264)",
+          "oklch(60% 0.14 264)",
+          "oklch(72% 0.10 264)",
+          "oklch(85% 0.06 264)",
+          "oklch(95% 0.04 264)"
+        ]
+      },
+      "indigo-text": {
+        "role": "primary",
+        "displayName": "Indigo Text",
+        "canonical": "oklch(42% 0.18 264)",
+        "tonalRamp": [
+          "oklch(15% 0.08 264)",
+          "oklch(25% 0.12 264)",
+          "oklch(35% 0.15 264)",
+          "oklch(42% 0.18 264)",
+          "oklch(55% 0.14 264)",
+          "oklch(68% 0.10 264)",
+          "oklch(82% 0.06 264)",
+          "oklch(93% 0.03 264)"
+        ]
+      },
+      "bg-wash": {
+        "role": "neutral",
+        "displayName": "Background Wash",
+        "canonical": "oklch(98% 0.004 250)",
+        "tonalRamp": [
+          "oklch(18% 0.01 250)",
+          "oklch(30% 0.008 250)",
+          "oklch(46% 0.01 250)",
+          "oklch(62% 0.008 250)",
+          "oklch(76% 0.006 250)",
+          "oklch(90% 0.006 250)",
+          "oklch(96% 0.005 250)",
+          "oklch(98% 0.004 250)"
+        ]
+      },
+      "surface-white": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "canonical": "oklch(100% 0.002 250)",
+        "tonalRamp": [
+          "oklch(18% 0.01 250)",
+          "oklch(30% 0.008 250)",
+          "oklch(46% 0.01 250)",
+          "oklch(62% 0.008 250)",
+          "oklch(76% 0.006 250)",
+          "oklch(90% 0.006 250)",
+          "oklch(96% 0.005 250)",
+          "oklch(100% 0.002 250)"
+        ]
+      },
+      "text-primary": {
+        "role": "neutral",
+        "displayName": "Text Primary",
+        "canonical": "oklch(18% 0.01 250)",
+        "tonalRamp": [
+          "oklch(18% 0.01 250)",
+          "oklch(30% 0.008 250)",
+          "oklch(46% 0.01 250)",
+          "oklch(62% 0.008 250)",
+          "oklch(76% 0.006 250)",
+          "oklch(90% 0.006 250)",
+          "oklch(96% 0.005 250)",
+          "oklch(100% 0.002 250)"
+        ]
+      },
+      "status-applied": {
+        "role": "tertiary",
+        "displayName": "Status Applied",
+        "canonical": "oklch(52% 0.14 264)"
+      },
+      "status-interview": {
+        "role": "tertiary",
+        "displayName": "Status Interview",
+        "canonical": "oklch(58% 0.16 200)"
+      },
+      "status-offer": {
+        "role": "tertiary",
+        "displayName": "Status Offer",
+        "canonical": "oklch(52% 0.16 145)"
+      },
+      "status-rejected": {
+        "role": "tertiary",
+        "displayName": "Status Rejected",
+        "canonical": "oklch(54% 0.12 25)"
+      }
+    },
+    "typographyMeta": {
+      "body": { "displayName": "Body", "purpose": "Default reading text, inputs, descriptions." },
+      "label": { "displayName": "Label", "purpose": "Form labels, sidebar headers, metadata." },
+      "title": { "displayName": "Title", "purpose": "Page headings. One per view." },
+      "mono": { "displayName": "Mono", "purpose": "Code snippets, credential IDs." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "state-transition", "value": "120ms ease", "purpose": "Default easing for hover, focus, and active state changes." },
+      { "name": "chevron-rotate", "value": "160ms ease", "purpose": "Section row expand/collapse indicator." },
+      { "name": "skeleton-pulse", "value": "1.6s ease-in-out infinite", "purpose": "Loading placeholder shimmer." }
+    ],
+    "breakpoints": [
+      { "name": "mobile", "value": "900px" },
+      { "name": "compact", "value": "640px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single primary action per view. Indigo fill, near-white text.",
+      "html": "<button class=\"ds-btn-primary\">Save</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; font-family: 'Inter', system-ui, sans-serif; cursor: pointer; border: 1px solid oklch(48% 0.18 264); background: oklch(48% 0.18 264); color: oklch(99% 0.002 264); white-space: nowrap; transition: background 120ms ease, border-color 120ms ease; } .ds-btn-primary:hover { background: oklch(44% 0.18 264); border-color: oklch(44% 0.18 264); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 0 0 3px oklch(85% 0.06 264 / 0.35); } .ds-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Supporting actions. Surface fill with border.",
+      "html": "<button class=\"ds-btn-secondary\">Cancel</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; font-family: 'Inter', system-ui, sans-serif; cursor: pointer; border: 1px solid oklch(90% 0.006 250); background: oklch(100% 0.002 250); color: oklch(18% 0.01 250); white-space: nowrap; transition: background 120ms ease, border-color 120ms ease; } .ds-btn-secondary:hover { background: oklch(96% 0.005 250); border-color: oklch(82% 0.008 250); } .ds-btn-secondary:focus-visible { outline: none; box-shadow: 0 0 0 3px oklch(85% 0.06 264 / 0.35); }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Standard form input. Raised surface at rest, accent ring on focus.",
+      "html": "<input class=\"ds-input\" placeholder=\"Enter value\" />",
+      "css": ".ds-input { width: 100%; font-size: 13.5px; font-family: 'Inter', system-ui, sans-serif; color: oklch(18% 0.01 250); background: oklch(99% 0.003 250); border: 1px solid oklch(90% 0.006 250); border-radius: 6px; padding: 8px 10px; transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease; } .ds-input:hover { border-color: oklch(82% 0.008 250); } .ds-input:focus { outline: none; background: oklch(100% 0.002 250); border-color: oklch(48% 0.18 264); box-shadow: 0 0 0 3px oklch(85% 0.06 264 / 0.35); }"
+    },
+    {
+      "name": "Navigation Item",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Sidebar navigation link. Subtle indigo tint when active.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item\" href=\"#\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"none\"><rect x=\"2\" y=\"4\" width=\"12\" height=\"9\" rx=\"1.5\" stroke=\"currentColor\" stroke-width=\"1.4\"/></svg>Jobs</a><a class=\"ds-nav-item ds-nav-item--active\" href=\"#\"><svg width=\"14\" height=\"14\" viewBox=\"0 0 16 16\" fill=\"none\"><rect x=\"3\" y=\"1.5\" width=\"10\" height=\"13\" rx=\"1.5\" stroke=\"currentColor\" stroke-width=\"1.4\"/></svg>Resume</a></nav>",
+      "css": ".ds-nav { display: flex; flex-direction: column; gap: 2px; padding: 0 12px; } .ds-nav-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 6px; font-size: 13.5px; font-family: 'Inter', system-ui, sans-serif; color: oklch(46% 0.01 250); text-decoration: none; transition: background 120ms ease, color 120ms ease; } .ds-nav-item svg { flex-shrink: 0; opacity: 0.7; } .ds-nav-item:hover { background: oklch(96% 0.005 250); color: oklch(18% 0.01 250); } .ds-nav-item--active { background: oklch(95% 0.04 264); color: oklch(42% 0.18 264); font-weight: 500; } .ds-nav-item--active svg { opacity: 1; }"
+    },
+    {
+      "name": "Status Badge (Applied)",
+      "kind": "chip",
+      "refersTo": "badge-applied",
+      "description": "Pill-shaped status indicator with dot. One variant per job status.",
+      "html": "<span class=\"ds-badge ds-badge--applied\">Applied</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; font-size: 11.5px; font-weight: 500; font-family: 'Inter', system-ui, sans-serif; border: 1px solid transparent; } .ds-badge::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; } .ds-badge--applied { background: oklch(94% 0.04 264); color: oklch(52% 0.14 264); border-color: oklch(87% 0.06 264); }"
+    },
+    {
+      "name": "Skill Tag",
+      "kind": "chip",
+      "refersTo": "badge-applied",
+      "description": "Removable pill for skills. Indigo-subtle tint.",
+      "html": "<span class=\"ds-skill-tag\">TypeScript <button class=\"ds-skill-tag-remove\">\u00d7</button></span>",
+      "css": ".ds-skill-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 450; font-family: 'Inter', system-ui, sans-serif; background: oklch(95% 0.04 264); color: oklch(42% 0.18 264); border: 1px solid oklch(87% 0.06 264); } .ds-skill-tag-remove { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; border: none; background: none; color: oklch(42% 0.18 264); cursor: pointer; font-size: 14px; line-height: 1; opacity: 0.6; transition: opacity 100ms ease; padding: 0; } .ds-skill-tag-remove:hover { opacity: 1; }"
+    },
+    {
+      "name": "Filter Tab",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "Underline-style tab for filtering lists. Active state uses accent underline.",
+      "html": "<div class=\"ds-filter-tabs\"><button class=\"ds-filter-tab ds-filter-tab--active\">All</button><button class=\"ds-filter-tab\">Applied</button><button class=\"ds-filter-tab\">Interview</button></div>",
+      "css": ".ds-filter-tabs { display: flex; gap: 4px; border-bottom: 1px solid oklch(90% 0.006 250); } .ds-filter-tab { padding: 8px 12px; font-size: 13px; font-family: 'Inter', system-ui, sans-serif; color: oklch(46% 0.01 250); cursor: pointer; border: none; background: none; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 120ms ease, border-color 120ms ease; } .ds-filter-tab:hover { color: oklch(18% 0.01 250); } .ds-filter-tab--active { color: oklch(42% 0.18 264); border-bottom-color: oklch(48% 0.18 264); font-weight: 500; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Ruled Notebook",
+    "overview": "Resumaire is a structured, calm workspace that disappears into the task. Like a well-made ruled notebook, it provides just enough structure to keep work organized without drawing attention to itself. The interface is precise, quiet, and functional. It respects the user's focus and never interrupts flow with decoration or unnecessary motion.\n\nThe system draws from Linear and Raycast: dense information display, restrained color, and interactions that feel immediate rather than theatrical. Every element earns its place through utility. There is no ornamentation, no personality for its own sake. The personality IS the restraint.\n\nThis system explicitly rejects: filler copy, AI-sounding explanations, decorative flourishes, and anything that breaks the user's task flow.",
+    "keyCharacteristics": [
+      "Flat and tonal: depth through surface layering, never shadows",
+      "Single accent used with discipline: the indigo appears sparingly and means \"actionable\"",
+      "Dense but not cramped: 14px base with tight spacing that still breathes",
+      "Immediate transitions: 100\u2013120ms state changes, no choreography",
+      "Structured over freeform: typed sections, not text blobs"
+    ],
+    "rules": [
+      { "name": "The One Voice Rule", "body": "The accent indigo is used on no more than 10% of any given screen. Primary buttons, active nav, and the Applied badge. Nothing else. Its scarcity makes it meaningful.", "section": "colors" },
+      { "name": "The Tinted Neutral Rule", "body": "No pure white (#fff) or pure black (#000) anywhere. Every neutral carries chroma 0.004\u20130.01 at hue 250. This keeps the palette cohesive without visible color.", "section": "colors" },
+      { "name": "The Tight Tracking Rule", "body": "Headings use negative letter-spacing (-0.01em to -0.03em). Body text uses normal tracking. This creates hierarchy through density contrast, not just size.", "section": "typography" },
+      { "name": "The No Shadow Rule", "body": "Shadows are prohibited. If an element needs to feel elevated, use a lighter surface tone and a border. If that's not enough, the element doesn't need elevation.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do use oklch for every color value. The system is built in oklch; hex approximations are for the frontmatter only.",
+      "Do keep the accent to primary buttons, active nav, and status-applied. Nothing else gets indigo.",
+      "Do use 120ms ease for state transitions (hover, focus, active). This is the system's tempo.",
+      "Do use 1px borders as the primary spatial separator. Borders define structure here.",
+      "Do use Inter's OpenType features (cv02, cv03, cv04, cv11) for disambiguated letterforms.",
+      "Do keep page content under 900px max-width. The tool is dense, not wide.",
+      "Do use negative letter-spacing on headings (-0.02em at 18px).",
+      "Do use the skeleton pulse animation (opacity 0.55\u20130.85, 1.6s ease-in-out) for loading states."
+    ],
+    "donts": [
+      "Don't add box-shadows. The system is flat by doctrine, not by accident.",
+      "Don't use pure black or pure white. Every neutral is tinted at hue 250.",
+      "Don't use the accent color decoratively. It means \"actionable\" or \"active.\" Using it for illustration or emphasis dilutes its meaning.",
+      "Don't add motion beyond state transitions. No entrance animations, no scroll-driven effects, no choreography.",
+      "Don't use border-left or border-right greater than 1px as a colored accent stripe.",
+      "Don't use gradient text or glassmorphism.",
+      "Don't add filler copy, restated headings, or AI-sounding explanations. Every word earns its place.",
+      "Don't interrupt the user's flow with modals when inline alternatives exist.",
+      "Don't use cards where a simple bordered list would suffice. Cards are for grouped metadata, not individual items.",
+      "Don't introduce new colors without a named role. If it doesn't have a CSS custom property, it doesn't belong."
+    ]
+  }
+}
