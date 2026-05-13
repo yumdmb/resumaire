@@ -68,7 +68,7 @@
 - [x] 8.3 Integrate server-side PDF rendering from saved resume HTML
 - [x] 8.4 Implement protected PDF export endpoint for owned resume versions
 - [x] 8.5 Ensure export excludes rejected or unaccepted suggestions and handles unsaved editor changes clearly
-- [ ] 8.6 Add tests for preview rendering, export ownership, and export source integrity
+- [x] 8.6 Add tests for preview rendering, export ownership, and export source integrity
 
 ## 9. End-To-End Verification
 
