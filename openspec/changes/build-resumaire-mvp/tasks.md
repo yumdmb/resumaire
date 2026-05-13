@@ -72,7 +72,7 @@
 
 ## 9. End-To-End Verification
 
-- [ ] 9.1 Add frontend tests for dashboard, job detail, resume builder, tailoring review, and export UI states
-- [ ] 9.2 Add end-to-end workflow test for sign in, create base resume, add job, tailor resume, save version, and export PDF
-- [ ] 9.3 Run backend test suite and frontend test suite
-- [ ] 9.4 Verify local startup instructions for both `frontend/` and `backend/`
+- [x] 9.1 Add frontend tests for dashboard, job detail, resume builder, tailoring review, and export UI states
+- [x] 9.2 Add end-to-end workflow test for sign in, create base resume, add job, tailor resume, save version, and export PDF
+- [x] 9.3 Run backend test suite and frontend test suite
+- [x] 9.4 Verify local startup instructions for both `frontend/` and `backend/`
