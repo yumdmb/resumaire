@@ -143,6 +143,110 @@ public sealed class JobEndpointsTests
         Assert.Equal("Interview", job.GetProperty("status").GetString());
     }
 
+    [Fact]
+    public async Task PatchJobStatus_ForOwner_UpdatesOnlyStatusAndUpdatedAt()
+    {
+        await using var factory = await CreateMigratedFactoryAsync();
+        await ResetDatabaseAsync(factory);
+        var createdAt = DateTimeOffset.UtcNow.AddDays(-3);
+        var originalUpdatedAt = DateTimeOffset.UtcNow.AddDays(-2);
+        var dateApplied = new DateOnly(2026, 5, 12);
+        var jobId = await SeedJobAsync(
+            factory,
+            OwnerUserId,
+            JobStatus.Saved,
+            company: "Original Co",
+            title: "Backend Engineer",
+            description: "Original description.",
+            link: "https://example.com/jobs/backend",
+            dateApplied: dateApplied,
+            notes: "Original notes.",
+            createdAt: createdAt,
+            updatedAt: originalUpdatedAt);
+
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
+
+        var response = await PatchJobStatusAsync(client, jobId, "Interview");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        var payload = await ReadJsonAsync(response);
+        var updatedJob = payload.GetProperty("data");
+        Assert.Equal(jobId, updatedJob.GetProperty("id").GetGuid());
+        Assert.Equal("Interview", updatedJob.GetProperty("status").GetString());
+        Assert.Equal("Original Co", updatedJob.GetProperty("company").GetString());
+        Assert.Equal("Backend Engineer", updatedJob.GetProperty("title").GetString());
+        Assert.False(updatedJob.TryGetProperty("description", out _));
+        Assert.True(updatedJob.GetProperty("updatedAt").GetDateTimeOffset() > originalUpdatedAt);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var storedJob = await dbContext.Jobs.AsNoTracking().SingleAsync(job => job.Id == jobId);
+
+        Assert.Equal(JobStatus.Interview, storedJob.Status);
+        Assert.Equal("Original Co", storedJob.Company);
+        Assert.Equal("Backend Engineer", storedJob.Title);
+        Assert.Equal("Original description.", storedJob.Description);
+        Assert.Equal("https://example.com/jobs/backend", storedJob.Link);
+        Assert.Equal(dateApplied, storedJob.DateApplied);
+        Assert.Equal("Original notes.", storedJob.Notes);
+        Assert.Equal(createdAt, storedJob.CreatedAt);
+        Assert.True(storedJob.UpdatedAt > originalUpdatedAt);
+    }
+
+    [Fact]
+    public async Task PatchJobStatus_WithUnsupportedStatus_ReturnsBadRequest()
+    {
+        await using var factory = await CreateMigratedFactoryAsync();
+        await ResetDatabaseAsync(factory);
+        var jobId = await SeedJobAsync(factory, OwnerUserId, JobStatus.Saved);
+
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
+
+        var response = await PatchJobStatusAsync(client, jobId, "Screening");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+
+        var payload = await ReadJsonAsync(response);
+        var statusErrors = payload.GetProperty("errors").GetProperty("Status").EnumerateArray().ToArray();
+        Assert.Contains(statusErrors, error => error.GetString() == SupportedStatusMessage);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var storedJob = await dbContext.Jobs.AsNoTracking().SingleAsync(job => job.Id == jobId);
+        Assert.Equal(JobStatus.Saved, storedJob.Status);
+    }
+
+    [Fact]
+    public async Task PatchJobStatus_ForDifferentUser_ReturnsNotFoundAndDoesNotExposeData()
+    {
+        await using var factory = await CreateMigratedFactoryAsync();
+        await ResetDatabaseAsync(factory);
+        var originalUpdatedAt = DateTimeOffset.UtcNow.AddDays(-2);
+        var ownerJobId = await SeedJobAsync(
+            factory,
+            OwnerUserId,
+            JobStatus.Saved,
+            updatedAt: originalUpdatedAt);
+        await SeedUsersAsync(factory, OtherUserId);
+
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OtherUserId);
+
+        var response = await PatchJobStatusAsync(client, ownerJobId, "Offer");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+
+        await using var scope = factory.Services.CreateAsyncScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var ownerJob = await dbContext.Jobs.AsNoTracking().SingleAsync(job => job.Id == ownerJobId);
+        Assert.Equal(OwnerUserId, ownerJob.UserId);
+        Assert.Equal(JobStatus.Saved, ownerJob.Status);
+        Assert.Equal(originalUpdatedAt, ownerJob.UpdatedAt);
+    }
+
     [Theory]
     [InlineData("POST")]
     [InlineData("PUT")]
@@ -250,7 +354,14 @@ public sealed class JobEndpointsTests
         ResumaireApiFactory factory,
         string userId,
         JobStatus status,
-        string title = "Backend Engineer")
+        string company = "Example Co",
+        string title = "Backend Engineer",
+        string description = "Build APIs.",
+        string? link = null,
+        DateOnly? dateApplied = null,
+        string? notes = null,
+        DateTimeOffset? createdAt = null,
+        DateTimeOffset? updatedAt = null)
     {
         await SeedUsersAsync(factory, userId);
 
@@ -260,18 +371,34 @@ public sealed class JobEndpointsTests
         var job = new Job
         {
             UserId = userId,
-            Company = "Example Co",
+            Company = company,
             Title = title,
-            Description = "Build APIs.",
+            Link = link,
+            Description = description,
             Status = status,
-            CreatedAt = now,
-            UpdatedAt = now
+            DateApplied = dateApplied,
+            Notes = notes,
+            CreatedAt = createdAt ?? now,
+            UpdatedAt = updatedAt ?? now
         };
 
         dbContext.Jobs.Add(job);
         await dbContext.SaveChangesAsync();
 
         return job.Id;
+    }
+
+    private static async Task<HttpResponseMessage> PatchJobStatusAsync(
+        HttpClient client,
+        Guid jobId,
+        string? status)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Patch, $"/api/jobs/{jobId}/status")
+        {
+            Content = JsonContent.Create(new { Status = status })
+        };
+
+        return await client.SendAsync(request);
     }
 
     private static async Task<JsonElement> ReadJsonAsync(HttpResponseMessage response)

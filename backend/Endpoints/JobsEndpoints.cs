@@ -27,6 +27,9 @@ public static class JobsEndpoints
         group.MapPut("/{jobId:guid}", UpdateJobAsync)
             .WithName("UpdateJob");
 
+        group.MapPatch("/{jobId:guid}/status", UpdateJobStatusAsync)
+            .WithName("UpdateJobStatus");
+
         group.MapDelete("/{jobId:guid}", DeleteJobAsync)
             .WithName("DeleteJob");
 
@@ -263,6 +266,48 @@ public static class JobsEndpoints
         return ApiResponses.Ok(MapJobResponse(job));
     }
 
+    private static async Task<IResult> UpdateJobStatusAsync(
+        Guid jobId,
+        JobStatusRequest request,
+        ApplicationDbContext dbContext,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        var userId = httpContext.User.GetUserId();
+        var job = await dbContext.Jobs
+            .SingleOrDefaultAsync(value => value.Id == jobId && value.UserId == userId, cancellationToken);
+
+        if (job is null)
+        {
+            return Results.NotFound();
+        }
+
+        var validationErrors = new Dictionary<string, string[]>(StringComparer.Ordinal);
+        if (string.IsNullOrWhiteSpace(request.Status))
+        {
+            AddValidationError(validationErrors, nameof(request.Status), "Status is required.");
+        }
+        else if (!TryParseJobStatus(request.Status, out var status))
+        {
+            AddValidationError(validationErrors, nameof(request.Status), UnsupportedStatusMessage);
+        }
+        else
+        {
+            job.Status = status;
+        }
+
+        if (validationErrors.Count > 0)
+        {
+            return validationErrors.ToValidationProblem();
+        }
+
+        job.UpdatedAt = DateTimeOffset.UtcNow;
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return ApiResponses.Ok(MapJobSummaryResponse(job));
+    }
+
     private static async Task<IResult> DeleteJobAsync(
         Guid jobId,
         ApplicationDbContext dbContext,
@@ -283,6 +328,20 @@ public static class JobsEndpoints
 
         return Results.NoContent();
     }
+
+    private static JobSummaryResponse MapJobSummaryResponse(Job job) =>
+        new(
+            job.Id,
+            job.Company,
+            job.Title,
+            job.Link,
+            job.Status.ToString(),
+            job.DateApplied,
+            job.Notes,
+            job.SelectedBaseResumeId,
+            job.SelectedTailoredResumeId,
+            job.CreatedAt,
+            job.UpdatedAt);
 
     private static JobResponse MapJobResponse(Job job) =>
         new(
@@ -427,6 +486,8 @@ public sealed record JobRequest(
     string? Notes,
     Guid? SelectedBaseResumeId,
     Guid? SelectedTailoredResumeId);
+
+public sealed record JobStatusRequest(string? Status);
 
 public sealed record JobSummaryResponse(
     Guid Id,
