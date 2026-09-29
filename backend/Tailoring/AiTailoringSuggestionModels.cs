@@ -20,7 +20,9 @@ public sealed record AiTailoringSuggestionDraft(
     string SuggestedContent,
     string Rationale,
     IReadOnlyList<string> SourceEvidencePaths,
-    string? AiNotes);
+    string? AiNotes,
+    string TargetPath = "",
+    string Operation = TailoringOperations.Replace);
 
 public sealed record AiTailoringGapNote(string Keyword, string Reason);
 
@@ -30,7 +32,9 @@ public sealed record ValidatedTailoringSuggestionDraft(
     string SuggestedContent,
     string Rationale,
     IReadOnlyList<ResumeKeywordEvidence> SourceEvidence,
-    string? AiNotes);
+    string? AiNotes,
+    string TargetPath = "",
+    string Operation = TailoringOperations.Replace);
 
 public sealed record TailoringSuggestionGuardrailResult(
     IReadOnlyList<ValidatedTailoringSuggestionDraft> Suggestions,

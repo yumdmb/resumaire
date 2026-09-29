@@ -35,6 +35,43 @@ The system SHALL present tailoring output as reviewable suggestions with origina
 - **WHEN** tailoring suggestions are generated
 - **THEN** the user can accept, reject, or edit each suggestion before it changes a tailored resume
 
+### Requirement: Targeted, non-destructive suggestions
+Each AI suggestion SHALL change exactly one editable resume location (summary, headline, a single bullet or detail line, a bullet list append, or a reorder of existing skills) and SHALL NOT change roles, employers, institutions, degrees, project names, dates, or credentials.
+
+#### Scenario: Suggestion targets an identity field
+- **WHEN** the AI proposes changing a role, employer, institution, degree, or project name
+- **THEN** the system rejects that suggestion before it is shown to the user
+
+#### Scenario: Skills reorder
+- **WHEN** the AI proposes a new skills list
+- **THEN** the system accepts it only if every skill is already on the resume
+
+### Requirement: Server-applied acceptance
+The system SHALL build a tailored resume from accepted suggestions on the server, using the current base resume and the user's edited text, so the saved version differs from the base resume only by what the user accepted.
+
+#### Scenario: Accept an edited suggestion
+- **WHEN** a user edits a suggestion's text and accepts it
+- **THEN** the saved version contains the edited text at the suggestion's target and is otherwise identical to the base resume
+
+#### Scenario: Base resume changed after generation
+- **WHEN** the base resume changed after suggestions were generated and the user tries to save them
+- **THEN** the system refuses with a conflict and asks the user to generate new suggestions
+
+#### Scenario: Suggestion already used or replaced
+- **WHEN** a user saves a suggestion that was already saved or was superseded by newer suggestions
+- **THEN** the system refuses with a conflict
+
+### Requirement: AI request limits and failure reporting
+The system SHALL limit AI suggestion requests per user and SHALL report provider failures with a specific, safe reason.
+
+#### Scenario: Limit reached
+- **WHEN** a user exceeds the configured number of suggestion requests
+- **THEN** the system responds with 429 and a retry delay
+
+#### Scenario: Provider failure
+- **WHEN** the provider is unreachable, times out, rejects the key, or returns a truncated or unreadable reply
+- **THEN** the system responds with a 502 whose detail names the cause without echoing resume content
+
 ### Requirement: Manual tailoring
 The system SHALL allow users to manually edit tailored resume sections without using AI suggestions.
 

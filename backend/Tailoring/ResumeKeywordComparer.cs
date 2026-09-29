@@ -126,6 +126,46 @@ public sealed class ResumeKeywordComparer : IResumeKeywordComparer
             }
         }
 
+        if (resumeContent.Projects is not null)
+        {
+            for (var index = 0; index < resumeContent.Projects.Count; index++)
+            {
+                var project = resumeContent.Projects[index];
+                AddIfPresent(sources, "Projects", $"Projects[{index}].Name", project.Name, isProminent: false);
+                AddIfPresent(sources, "Projects", $"Projects[{index}].Technologies", project.Technologies, isProminent: false);
+
+                for (var bulletIndex = 0; bulletIndex < (project.Bullets?.Count ?? 0); bulletIndex++)
+                {
+                    AddIfPresent(
+                        sources,
+                        "Projects",
+                        $"Projects[{index}].Bullets[{bulletIndex}]",
+                        project.Bullets![bulletIndex],
+                        isProminent: false);
+                }
+            }
+        }
+
+        if (resumeContent.Activities is not null)
+        {
+            for (var index = 0; index < resumeContent.Activities.Count; index++)
+            {
+                var activity = resumeContent.Activities[index];
+                AddIfPresent(sources, "Activities", $"Activities[{index}].Title", activity.Title, isProminent: false);
+                AddIfPresent(sources, "Activities", $"Activities[{index}].Role", activity.Role, isProminent: false);
+
+                for (var bulletIndex = 0; bulletIndex < (activity.Bullets?.Count ?? 0); bulletIndex++)
+                {
+                    AddIfPresent(
+                        sources,
+                        "Activities",
+                        $"Activities[{index}].Bullets[{bulletIndex}]",
+                        activity.Bullets![bulletIndex],
+                        isProminent: false);
+                }
+            }
+        }
+
         if (resumeContent.Certifications is not null)
         {
             for (var index = 0; index < resumeContent.Certifications.Count; index++)

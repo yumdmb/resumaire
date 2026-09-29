@@ -11,6 +11,8 @@ interface Props {
   baseContent: ResumeContent
   onSave: (content: ResumeContent, suggestions: SuggestionState[], name: string) => void
   onCancel: () => void
+  /** True while a save is in flight. The panel stays mounted so a failed save keeps every decision. */
+  isSaving?: boolean
 }
 
 export function AiReviewPanel({
@@ -20,6 +22,7 @@ export function AiReviewPanel({
   baseContent,
   onSave,
   onCancel,
+  isSaving = false,
 }: Props) {
   const [suggestions, setSuggestions] = useState<SuggestionState[]>(initialSuggestions)
   const [versionName, setVersionName] = useState('')
@@ -145,8 +148,8 @@ export function AiReviewPanel({
                 not added as suggestions.
               </p>
               <div className="tailor-gap-list">
-                {batch.gapNotes.map((note) => (
-                  <div key={note.keyword} className="tailor-gap-row">
+                {batch.gapNotes.map((note, index) => (
+                  <div key={`${note.keyword}-${index}`} className="tailor-gap-row">
                     <code className="tailor-gap-keyword">{note.keyword}</code>
                     <span className="tailor-gap-reason">{note.reason}</span>
                   </div>
@@ -202,12 +205,18 @@ export function AiReviewPanel({
           />
         </div>
         <div className="tailor-save-actions">
-          <button type="button" className="btn btn-secondary" onClick={onCancel}>
+          {acceptedCount === 0 && suggestions.length > 0 && (
+            <span className="prose-muted" role="status" style={{ alignSelf: 'center', fontSize: 12 }}>
+              No suggestions accepted. Saving keeps your base resume unchanged.
+            </span>
+          )}
+          <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={isSaving}>
             Cancel
           </button>
           <button
             type="button"
             className="btn btn-primary"
+            disabled={isSaving}
             onClick={() =>
               onSave(
                 applyAcceptedSuggestions(baseContent, suggestions),
@@ -216,7 +225,7 @@ export function AiReviewPanel({
               )
             }
           >
-            Save version
+            {isSaving ? 'Saving…' : 'Save version'}
           </button>
         </div>
       </div>

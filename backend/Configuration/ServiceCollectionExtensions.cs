@@ -102,8 +102,10 @@ public static class ServiceCollectionExtensions
                 ?? new OpenAiOptions();
 
             client.BaseAddress = CreateBaseUri(options.BaseUrl);
+            client.Timeout = TimeSpan.FromSeconds(Math.Max(5, options.TimeoutSeconds));
         });
 
+        services.AddAiTailoringRateLimiting(configuration);
 
         services.AddCors(options =>
         {

@@ -20,6 +20,8 @@ describe('AiReviewPanel', () => {
           id: 'suggestion-1',
           reviewState: 'Pending',
           targetSection: 'Experience',
+          targetPath: 'Experience[0].Bullets[0]',
+          operation: 'Replace',
           originalContent: 'Built API workflows.',
           suggestedContent: 'Built React API workflows for hiring teams.',
           rationale: 'The job emphasizes React.',
@@ -42,6 +44,8 @@ describe('AiReviewPanel', () => {
           id: 'suggestion-2',
           reviewState: 'Pending',
           targetSection: 'Summary',
+          targetPath: 'Summary',
+          operation: 'Replace',
           originalContent: 'Builds reliable APIs.',
           suggestedContent: 'Builds reliable React and API experiences.',
           rationale: 'The job mentions React.',
@@ -79,6 +83,7 @@ describe('AiReviewPanel', () => {
       editArea,
       'Led React API workflow improvements for hiring teams.',
     )
+    await user.click(screen.getAllByRole('button', { name: /^accept$/i })[0])
     await user.click(screen.getAllByRole('button', { name: /^reject$/i })[1])
     await user.click(screen.getByLabelText(/^version name$/i))
     await user.type(screen.getByLabelText(/^version name$/i), 'React role')
@@ -101,7 +106,110 @@ describe('AiReviewPanel', () => {
     ])
     expect(versionName).toBe('React role')
   })
+  it('does not accept a suggestion just because it is being edited', async () => {
+    const user = userEvent.setup()
+    const onSave = vi.fn()
+
+    render(
+      <AiReviewPanel
+        analysis={createAnalysis()}
+        batch={createBatch()}
+        initialSuggestions={[createSuggestionState()]}
+        baseContent={createResumeContent()}
+        onSave={onSave}
+        onCancel={vi.fn()}
+      />,
+    )
+
+    await user.click(screen.getByRole('button', { name: /^edit$/i }))
+    await user.click(screen.getByRole('button', { name: /^save version$/i }))
+
+    const [savedContent, savedSuggestions] = onSave.mock.calls[0] as [
+      ResumeContent,
+      SuggestionState[],
+    ]
+    expect(savedSuggestions[0].decision).toBe('pending')
+    expect(savedContent.summary).toBe('Builds reliable APIs.')
+  })
+
+  it('warns that saving with nothing accepted keeps the base resume', () => {
+    render(
+      <AiReviewPanel
+        analysis={createAnalysis()}
+        batch={createBatch()}
+        initialSuggestions={[createSuggestionState()]}
+        baseContent={createResumeContent()}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByRole('status')).toHaveTextContent(/base resume unchanged/i)
+  })
+
+  it('disables saving and shows progress while a save is in flight', () => {
+    render(
+      <AiReviewPanel
+        analysis={createAnalysis()}
+        batch={createBatch()}
+        initialSuggestions={[createSuggestionState()]}
+        baseContent={createResumeContent()}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+        isSaving
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: /saving/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /^cancel$/i })).toBeDisabled()
+  })
+
+  it('renders repeated gap-note keywords without key collisions', () => {
+    const batch = createBatch()
+    batch.gapNotes = [
+      { keyword: 'Docker', reason: 'First.' },
+      { keyword: 'Docker', reason: 'Second.' },
+    ]
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+
+    render(
+      <AiReviewPanel
+        analysis={createAnalysis()}
+        batch={batch}
+        initialSuggestions={[createSuggestionState()]}
+        baseContent={createResumeContent()}
+        onSave={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('First.')).toBeInTheDocument()
+    expect(screen.getByText('Second.')).toBeInTheDocument()
+    expect(errors).not.toHaveBeenCalled()
+    errors.mockRestore()
+  })
 })
+
+function createSuggestionState(): SuggestionState {
+  return {
+    suggestion: {
+      id: 'suggestion-1',
+      reviewState: 'Pending',
+      targetSection: 'Summary',
+      targetPath: 'Summary',
+      operation: 'Replace',
+      originalContent: 'Builds reliable APIs.',
+      suggestedContent: 'Builds reliable React APIs.',
+      rationale: 'The job mentions React.',
+      aiNotes: null,
+      sourceEvidence: [],
+      createdAt: '2026-05-12T00:00:00Z',
+      reviewedAt: null,
+    },
+    decision: 'pending',
+    editedContent: 'Builds reliable React APIs.',
+  }
+}
 
 function createBatch(): TailoringSuggestionBatch {
   return {

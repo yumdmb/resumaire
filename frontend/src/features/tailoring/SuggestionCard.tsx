@@ -20,8 +20,8 @@ export function SuggestionCard({ state, onDecision, onEditContent }: Props) {
     .join(' ')
 
   function handleEdit() {
+    // Editing does not decide anything: the user still accepts the edited text explicitly.
     setIsEditing(true)
-    onDecision('accepted')
   }
 
   function handleAccept() {
@@ -43,6 +43,11 @@ export function SuggestionCard({ state, onDecision, onEditContent }: Props) {
     <div className={cardClass}>
       <div className="suggestion-card-header">
         <span className="suggestion-section-tag">{suggestion.targetSection}</span>
+        {suggestion.targetPath && suggestion.targetPath !== suggestion.targetSection && (
+          <code className="suggestion-target-path" style={{ fontSize: 11, opacity: 0.7 }}>
+            {suggestion.targetPath}
+          </code>
+        )}
 
         <div className="suggestion-decision-controls">
           {decision !== 'accepted' && (

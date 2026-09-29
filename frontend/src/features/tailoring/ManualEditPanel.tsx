@@ -11,13 +11,15 @@ interface Props {
   initialContent: ResumeContent
   onSave: (content: ResumeContent, name: string) => void
   onCancel: () => void
+  /** True while a save is in flight. The panel stays mounted so a failed save keeps the edits. */
+  isSaving?: boolean
 }
 
 /**
  * Manual tailored resume editing. Uses the same section editors as the base
  * resume builder. Saves a tailored version without AI suggestions.
  */
-export function ManualEditPanel({ initialContent, onSave, onCancel }: Props) {
+export function ManualEditPanel({ initialContent, onSave, onCancel, isSaving = false }: Props) {
   const [content, setContent] = useState<ResumeContent>(initialContent)
   const [activeSection, setActiveSection] = useState<ResumeSectionId | null>('summary')
   const [versionName, setVersionName] = useState('')
@@ -94,15 +96,16 @@ export function ManualEditPanel({ initialContent, onSave, onCancel }: Props) {
           />
         </div>
         <div className="tailor-save-actions">
-          <button type="button" className="btn btn-secondary" onClick={onCancel}>
+          <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={isSaving}>
             Cancel
           </button>
           <button
             type="button"
             className="btn btn-primary"
+            disabled={isSaving}
             onClick={() => onSave(content, versionName)}
           >
-            Save version
+            {isSaving ? 'Saving…' : 'Save version'}
           </button>
         </div>
       </div>
