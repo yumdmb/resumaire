@@ -1,6 +1,7 @@
 import type { ResumeEducation } from '../../lib/types'
 import { emptyEducation } from '../../lib/types'
 import { CloseIcon } from './CloseIcon'
+import { EditorEntryHeader } from './EditorEntryHeader'
 
 interface ListProps {
   value: ResumeEducation[]
@@ -44,13 +45,7 @@ interface EntryProps {
   onRemove: () => void
 }
 
-function EducationEntryEditor({
-  entry,
-  index,
-  idPrefix,
-  onChange,
-  onRemove,
-}: EntryProps) {
+function EducationEntryEditor({ entry, index, idPrefix, onChange, onRemove }: EntryProps) {
   const id = (suffix: string) => `${idPrefix}edu-${index}-${suffix}`
 
   function update(field: keyof ResumeEducation, val: unknown) {
@@ -65,20 +60,12 @@ function EducationEntryEditor({
 
   return (
     <div className="editor-entry">
-      <div className="editor-entry-header">
-        <span className="editor-entry-num">{index + 1}</span>
-        <span className="editor-entry-title">
-          {entry.institution || entry.degree || 'New education'}
-        </span>
-        <button
-          type="button"
-          className="btn-icon"
-          onClick={onRemove}
-          aria-label="Remove entry"
-        >
-          <CloseIcon />
-        </button>
-      </div>
+      <EditorEntryHeader
+        num={index + 1}
+        title={entry.institution || entry.degree || 'New education'}
+        onRemove={onRemove}
+        removeLabel="Remove entry"
+      />
 
       <div className="form-row-two">
         <div className="form-field">
@@ -187,9 +174,7 @@ function EducationEntryEditor({
           <button
             type="button"
             className="btn-text"
-            onClick={() =>
-              onChange({ ...entry, details: [...entry.details, ''] })
-            }
+            onClick={() => onChange({ ...entry, details: [...entry.details, ''] })}
           >
             + Add detail
           </button>

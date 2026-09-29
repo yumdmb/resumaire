@@ -1,7 +1,7 @@
 import type { ResumeProject } from '../../lib/types'
 import { emptyProject } from '../../lib/types'
 import { BulletsEditor } from './BulletsEditor'
-import { CloseIcon } from './CloseIcon'
+import { EditorEntryHeader } from './EditorEntryHeader'
 
 interface ListProps {
   value: ResumeProject[]
@@ -54,18 +54,12 @@ function ProjectEntryEditor({ entry, index, idPrefix, onChange, onRemove }: Entr
 
   return (
     <div className="editor-entry">
-      <div className="editor-entry-header">
-        <span className="editor-entry-num">{index + 1}</span>
-        <span className="editor-entry-title">{entry.name || 'New project'}</span>
-        <button
-          type="button"
-          className="btn-icon"
-          onClick={onRemove}
-          aria-label="Remove entry"
-        >
-          <CloseIcon />
-        </button>
-      </div>
+      <EditorEntryHeader
+        num={index + 1}
+        title={entry.name || 'New project'}
+        onRemove={onRemove}
+        removeLabel="Remove entry"
+      />
 
       <div className="form-row-two">
         <div className="form-field">

@@ -25,7 +25,7 @@ Each numbered group is one phase and one commit. Every group must leave `npm run
 
 ## 3. Resume builder and Tailoring
 
-- [ ] 3.1 Restyle Resume builder: sticky section index with scroll-spy, calmer entry cards, collapse/expand entries, shared Field/Button; verify existing `ResumeBuilderPage` tests pass (updated as needed) and screenshot both themes
+- [x] 3.1 Restyle Resume builder: sticky section index with scroll-spy, calmer entry cards, collapse/expand entries, shared Field/Button; verify existing `ResumeBuilderPage` tests pass (updated as needed) and screenshot both themes
 - [ ] 3.2 Restyle remaining resume section editors (skills groups, bullets, projects, activities, links, certifications) to the new components; verify by editing and saving each section type in the browser
 - [ ] 3.3 Add a `Stepper` component and apply it to `TailoringPage` (select job, review, saved) driven by existing state; verify with updated `TailoringPage` tests that the current step is exposed (`aria-current="step"`)
 - [ ] 3.4 Redesign suggestion cards with before/after blocks, clear accepted/rejected states and non-colour cues, and restyle gap notes, keywords tab, save bar and saved confirmation; verify updated `AiReviewPanel` tests and a screenshot of a review with mixed states

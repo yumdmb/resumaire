@@ -1,12 +1,62 @@
-/* ─── Resume sections ────────────────────────────────────────── */
+/* ─── Resume builder layout ──────────────────────────────────── */
 
-.section-list {
+.page--resume {
+  max-width: 1080px;
+}
+
+.resume-layout {
+  display: grid;
+  grid-template-columns: 172px minmax(0, 1fr);
+  gap: var(--space-8);
+  align-items: start;
+}
+
+/* Sticky section index with scroll-spy */
+.section-index {
+  position: sticky;
+  top: var(--space-6);
+}
+
+.section-index ol {
+  list-style: none;
   display: flex;
   flex-direction: column;
+  border-left: 1px solid var(--border);
+}
+
+.section-index-link {
+  display: block;
+  padding: 6px var(--space-3);
+  margin-left: -1px;
+  border-left: 2px solid transparent;
+  font-size: 13px;
+  color: var(--text-secondary);
+  transition: color var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.section-index-link:hover {
+  color: var(--text-primary);
+}
+
+.section-index-link.is-current {
+  color: var(--accent-text);
+  border-left-color: var(--accent);
+  font-weight: 500;
+}
+
+.section-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.section-card {
+  scroll-margin-top: var(--space-6);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  overflow: hidden;
   background: var(--surface);
+  overflow: hidden;
 }
 
 .section-row {
@@ -14,33 +64,23 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--border);
   cursor: pointer;
-  transition: background 100ms ease;
+  transition: background var(--dur-fast) var(--ease);
   background: none;
-  border-left: none;
-  border-right: none;
-  border-top: none;
+  border: none;
   width: 100%;
   text-align: left;
   font: inherit;
   color: inherit;
 }
 
-.section-row:last-child {
-  border-bottom: none;
-}
-
 .section-row:hover {
   background: var(--surface-raised);
 }
 
-.section-row--active {
-  background: var(--surface-raised);
-}
-
 .section-row-name {
-  font-size: 13.5px;
+  font-family: var(--font-display);
+  font-size: 16px;
   font-weight: 500;
   flex: 1;
 }
@@ -48,24 +88,41 @@
 .section-row-meta {
   font-size: 12px;
   color: var(--text-tertiary);
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .section-row-chevron {
   flex-shrink: 0;
   color: var(--text-tertiary);
-  transition: transform 160ms ease;
+  transition: transform var(--dur) var(--ease);
 }
 
-.section-row--active .section-row-chevron {
+.section-card.is-open .section-row-chevron {
   transform: rotate(180deg);
+}
+
+.section-card.is-open .section-row {
+  border-bottom: 1px solid var(--border);
 }
 
 /* ─── Section editor panel ───────────────────────────────────── */
 
 .section-editor {
   padding: var(--space-5) var(--space-5) var(--space-6);
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-raised);
+  background: var(--surface);
+}
+
+@media (max-width: 800px) {
+  .resume-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .section-index {
+    display: none;
+  }
 }
 
 .editor-fields {
@@ -91,10 +148,26 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  padding: var(--space-4);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
+  padding: var(--space-4) 0 0;
+  border-top: 1px solid var(--border);
+}
+
+.editor-entry:first-of-type {
+  border-top: none;
+  padding-top: 0;
+}
+
+/* Collapsed entry: keep the header, hide the fields (values stay mounted) */
+.editor-entry:has(> .editor-entry-header .editor-entry-toggle[aria-expanded='false']) > :not(.editor-entry-header) {
+  display: none;
+}
+
+.editor-entry-toggle svg {
+  transition: transform var(--dur) var(--ease);
+}
+
+.editor-entry-toggle[aria-expanded='false'] svg {
+  transform: rotate(-90deg);
 }
 
 .editor-entry-header {
@@ -105,16 +178,9 @@
 
 .editor-entry-num {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--surface-sunken);
-  border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 600;
+  min-width: 20px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
   color: var(--text-tertiary);
 }
 
@@ -264,3 +330,25 @@
 }
 
 
+
+/* Flat accordion list, still used by the tailoring manual-edit panel */
+.section-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.section-list > [role='listitem'] + [role='listitem'] {
+  border-top: 1px solid var(--border);
+}
+
+.section-list .section-row--active {
+  background: var(--surface-raised);
+}
+
+.section-list .section-row--active .section-row-chevron {
+  transform: rotate(180deg);
+}

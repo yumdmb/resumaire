@@ -1,7 +1,7 @@
 import type { ResumeActivity } from '../../lib/types'
 import { emptyActivity } from '../../lib/types'
 import { BulletsEditor } from './BulletsEditor'
-import { CloseIcon } from './CloseIcon'
+import { EditorEntryHeader } from './EditorEntryHeader'
 
 interface ListProps {
   value: ResumeActivity[]
@@ -54,20 +54,12 @@ function ActivityEntryEditor({ entry, index, idPrefix, onChange, onRemove }: Ent
 
   return (
     <div className="editor-entry">
-      <div className="editor-entry-header">
-        <span className="editor-entry-num">{index + 1}</span>
-        <span className="editor-entry-title">
-          {entry.title || entry.role || 'New activity'}
-        </span>
-        <button
-          type="button"
-          className="btn-icon"
-          onClick={onRemove}
-          aria-label="Remove entry"
-        >
-          <CloseIcon />
-        </button>
-      </div>
+      <EditorEntryHeader
+        num={index + 1}
+        title={entry.title || entry.role || 'New activity'}
+        onRemove={onRemove}
+        removeLabel="Remove entry"
+      />
 
       <div className="form-row-two">
         <div className="form-field">
