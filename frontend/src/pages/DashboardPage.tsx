@@ -1,3 +1,4 @@
+import { Page } from '../components/ui/Page'
 import { Link } from 'react-router-dom'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ApiError, jobsApi } from '../lib/api'
@@ -102,7 +103,7 @@ export function DashboardPage() {
         : ''
 
   return (
-    <div className={`page${view === 'board' ? ' page--wide' : ''}`}>
+    <Page width={view === 'board' ? 'full' : 'standard'}>
       <PageHeader
         title="Jobs"
         subtitle={subtitle}
@@ -216,7 +217,7 @@ export function DashboardPage() {
           ))}
         </div>
       )}
-    </div>
+    </Page>
   )
 }
 

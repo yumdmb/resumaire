@@ -1,3 +1,4 @@
+import { Page } from '../components/ui/Page'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError, exportApi, jobsApi } from '../lib/api'
@@ -146,7 +147,7 @@ export function JobDetailPage() {
 
   if (state.status === 'loading') {
     return (
-      <div className="page" aria-busy="true">
+      <Page width="standard" aria-busy="true">
         <div className="page-header">
           <div>
             <Link to="/" className="back-link">
@@ -165,13 +166,13 @@ export function JobDetailPage() {
             <Skeleton variant="card" />
           </div>
         </div>
-      </div>
+      </Page>
     )
   }
 
   if (state.status === 'not_found') {
     return (
-      <div className="page">
+      <Page width="standard">
         <div className="page-header">
           <div>
             <Link to="/" className="back-link">
@@ -191,13 +192,13 @@ export function JobDetailPage() {
             </ButtonLink>
           }
         />
-      </div>
+      </Page>
     )
   }
 
   if (state.status === 'error') {
     return (
-      <div className="page">
+      <Page width="standard">
         <div className="page-header">
           <div>
             <Link to="/" className="back-link">
@@ -212,7 +213,7 @@ export function JobDetailPage() {
           title={state.message}
           action={<Button onClick={handleRetry}>Retry</Button>}
         />
-      </div>
+      </Page>
     )
   }
 
@@ -223,7 +224,7 @@ export function JobDetailPage() {
   )
 
   return (
-    <div className="page">
+    <Page width="standard">
       <div className="page-header">
         <div>
           <Link to="/" className="back-link">
@@ -371,7 +372,7 @@ export function JobDetailPage() {
           </Card>
         </div>
       </div>
-    </div>
+    </Page>
   )
 }
 

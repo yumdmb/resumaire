@@ -12,10 +12,12 @@
   --surface: oklch(98.6% 0.007 85);
   --surface-raised: oklch(99.3% 0.004 85);
   --surface-sunken: oklch(93.8% 0.014 82);
+  --paper: oklch(99.5% 0.003 85);
 
   /* Hairlines */
   --border: oklch(88% 0.015 80);
   --border-strong: oklch(76% 0.022 75);
+  --control-border: oklch(60% 0.02 70);
 
   /* Ink */
   --text-primary: oklch(22% 0.02 55);
@@ -69,6 +71,8 @@
   /* Layout */
   --rail-width: 76px;
   --bottom-nav-height: 58px;
+  --page-narrow: 720px;
+  --page-standard: 1120px;
 
   /* Motion */
   --dur-fast: 120ms;
@@ -86,9 +90,11 @@
   --surface: oklch(22.5% 0.013 60);
   --surface-raised: oklch(25.5% 0.014 60);
   --surface-sunken: oklch(16.5% 0.01 60);
+  --paper: oklch(96% 0.006 85);
 
   --border: oklch(32% 0.015 60);
   --border-strong: oklch(44% 0.018 60);
+  --control-border: oklch(58% 0.02 65);
 
   --text-primary: oklch(93% 0.01 80);
   --text-secondary: oklch(76% 0.015 75);
@@ -124,6 +130,5 @@
   --warning-border: color-mix(in oklch, var(--warning) var(--tint-border-strength), var(--surface));
   --info-bg: color-mix(in oklch, var(--status-interview) var(--tint-strength), var(--surface));
   --info-border: color-mix(in oklch, var(--status-interview) var(--tint-border-strength), var(--surface));
-  --paper: oklch(99% 0.004 85);
   --accent-border: color-mix(in oklch, var(--accent) var(--tint-border-strength), var(--surface));
 }

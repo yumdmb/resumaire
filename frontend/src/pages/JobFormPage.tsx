@@ -1,3 +1,4 @@
+import { Page } from '../components/ui/Page'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { ApiError, jobsApi } from '../lib/api'
@@ -148,7 +149,7 @@ export function JobFormPage({ mode }: { mode: Mode }) {
 
   if (loadState.status === 'loading') {
     return (
-      <div className="page" aria-busy="true">
+      <Page width="narrow" aria-busy="true">
         <FormHeader heading={heading} backHref={backHref} backLabel={backLabel} />
         <div className="form-card">
           <div className="skeleton skeleton-line" style={{ width: '30%' }} />
@@ -161,13 +162,13 @@ export function JobFormPage({ mode }: { mode: Mode }) {
             style={{ width: '80%', marginTop: 12 }}
           />
         </div>
-      </div>
+      </Page>
     )
   }
 
   if (loadState.status === 'not_found') {
     return (
-      <div className="page">
+      <Page width="narrow">
         <FormHeader heading={heading} backHref="/" backLabel="Jobs" />
         <div className="empty-state">
           <p className="empty-state-title">Job not found</p>
@@ -178,13 +179,13 @@ export function JobFormPage({ mode }: { mode: Mode }) {
             Back to jobs
           </Link>
         </div>
-      </div>
+      </Page>
     )
   }
 
   if (loadState.status === 'error') {
     return (
-      <div className="page">
+      <Page width="narrow">
         <FormHeader heading={heading} backHref={backHref} backLabel={backLabel} />
         <div className="empty-state">
           <p className="empty-state-title">Could not load this job</p>
@@ -193,12 +194,12 @@ export function JobFormPage({ mode }: { mode: Mode }) {
             Retry
           </button>
         </div>
-      </div>
+      </Page>
     )
   }
 
   return (
-    <div className="page">
+    <Page width="narrow">
       <FormHeader heading={heading} backHref={backHref} backLabel={backLabel} />
 
       {errors._general?.length ? (
@@ -305,7 +306,7 @@ export function JobFormPage({ mode }: { mode: Mode }) {
           </Button>
         </div>
       </form>
-    </div>
+    </Page>
   )
 }
 

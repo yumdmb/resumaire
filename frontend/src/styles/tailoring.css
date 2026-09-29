@@ -1,54 +1,3 @@
-/* ─── Tailoring steps ────────────────────────────────────────── */
-
-.step-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.step-item {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-}
-
-.step-num {
-  flex-shrink: 0;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--surface-sunken);
-  border: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text-tertiary);
-  margin-top: 1px;
-}
-
-.step-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.step-title {
-  font-size: 13.5px;
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.step-desc {
-  font-size: 12.5px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
 
 /* ─── Tailoring: loading ─────────────────────────────────────── */
 
@@ -267,9 +216,93 @@
   border-color: var(--success-border);
 }
 
+.suggestion-card--accepted {
+  border-left: 3px solid var(--success);
+}
+
 .suggestion-card--rejected {
   background: var(--surface-sunken);
-  opacity: 0.7;
+  border-style: dashed;
+  border-color: var(--border-strong);
+}
+
+.suggestion-card--rejected .suggestion-suggested {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+  text-decoration-color: var(--border-strong);
+}
+
+.suggestion-target-path {
+  font-size: 11px;
+  color: var(--text-tertiary);
+}
+
+.suggestion-state {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-tertiary);
+}
+
+.suggestion-state--accepted {
+  color: var(--success);
+}
+
+.suggestion-state--rejected {
+  color: var(--text-secondary);
+}
+
+.suggestion-diff {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.suggestion-diff--single {
+  grid-template-columns: 1fr;
+}
+
+.suggestion-block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-raised);
+  min-width: 0;
+}
+
+.suggestion-block--before {
+  background: var(--surface-sunken);
+}
+
+.suggestion-block--after {
+  border-color: var(--border-strong);
+}
+
+.tailor-save-name {
+  flex: 1;
+  max-width: 320px;
+}
+
+.tailor-save-note {
+  align-self: center;
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .suggestion-diff {
+    grid-template-columns: 1fr;
+  }
+  .suggestion-card-header {
+    flex-wrap: wrap;
+  }
+  .suggestion-state {
+    margin-left: 0;
+  }
 }
 
 .suggestion-card-header {
@@ -307,39 +340,9 @@
 
 .suggestion-decision-controls {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-1);
-}
-
-.suggestion-btn {
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 500;
-  padding: 4px 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: background 120ms ease, border-color 120ms ease, color 120ms ease;
-}
-
-.suggestion-btn:hover {
-  background: var(--surface);
-  border-color: var(--border);
-  color: var(--text-primary);
-}
-
-.suggestion-btn--accept:hover {
-  background: var(--success-bg);
-  border-color: var(--success-border);
-  color: var(--status-offer);
-}
-
-.suggestion-btn--reject:hover {
-  background: var(--danger-bg);
-  border-color: var(--danger-border);
-  color: var(--status-rejected);
 }
 
 /* Card body: stacked diff rows */
@@ -377,10 +380,6 @@
   font-size: 13px;
   line-height: 1.55;
   color: var(--text-primary);
-}
-
-.suggestion-suggested--accepted {
-  color: var(--status-offer);
 }
 
 .suggestion-edit-area {
@@ -509,7 +508,7 @@
   display: inline-flex;
   align-items: center;
   padding: 3px 10px;
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   font-size: 12.5px;
   font-weight: 450;
   border: 1px solid transparent;
@@ -643,4 +642,10 @@
   }
 }
 
-
+.back-link--button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+}

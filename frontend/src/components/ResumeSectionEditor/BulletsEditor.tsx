@@ -1,3 +1,4 @@
+import { Button } from '../ui/Button'
 import { CloseIcon } from './CloseIcon'
 
 interface Props {
@@ -33,13 +34,11 @@ export function BulletsEditor({ value, onChange }: Props) {
             </button>
           </div>
         ))}
-        <button
-          type="button"
-          className="btn-text"
+        <Button variant="ghost" small
           onClick={() => onChange([...value, ''])}
         >
           + Add bullet
-        </button>
+        </Button>
       </div>
     </div>
   )

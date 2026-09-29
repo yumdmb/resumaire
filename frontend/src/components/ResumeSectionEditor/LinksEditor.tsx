@@ -1,3 +1,4 @@
+import { Button } from '../ui/Button'
 import type { ResumeLink } from '../../lib/types'
 import { emptyLink } from '../../lib/types'
 import { EditorEntryHeader } from './EditorEntryHeader'
@@ -54,13 +55,11 @@ export function LinksEditor({ value, onChange, idPrefix }: Props) {
           </div>
         </div>
       ))}
-      <button
-        type="button"
-        className="btn btn-secondary editor-add-btn"
+      <Button className="editor-add-btn"
         onClick={() => onChange([...value, emptyLink()])}
       >
         + Add link
-      </button>
+      </Button>
     </div>
   )
 }

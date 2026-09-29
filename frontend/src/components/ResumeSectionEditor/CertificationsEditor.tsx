@@ -1,3 +1,4 @@
+import { Button } from '../ui/Button'
 import type { ResumeCertification } from '../../lib/types'
 import { emptyCertification } from '../../lib/types'
 import { EditorEntryHeader } from './EditorEntryHeader'
@@ -25,13 +26,11 @@ export function CertificationsEditor({ value, onChange, idPrefix }: ListProps) {
           onRemove={() => onChange(value.filter((_, idx) => idx !== i))}
         />
       ))}
-      <button
-        type="button"
-        className="btn btn-secondary editor-add-btn"
+      <Button className="editor-add-btn"
         onClick={() => onChange([...value, emptyCertification()])}
       >
         + Add certification
-      </button>
+      </Button>
     </div>
   )
 }

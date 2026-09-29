@@ -1,3 +1,4 @@
+import { Button } from '../ui/Button'
 import type { ResumeExperience } from '../../lib/types'
 import { emptyExperience } from '../../lib/types'
 import { CloseIcon } from './CloseIcon'
@@ -26,13 +27,11 @@ export function ExperienceEditor({ value, onChange, idPrefix }: ListProps) {
           onRemove={() => onChange(value.filter((_, idx) => idx !== i))}
         />
       ))}
-      <button
-        type="button"
-        className="btn btn-secondary editor-add-btn"
+      <Button className="editor-add-btn"
         onClick={() => onChange([...value, emptyExperience()])}
       >
         + Add experience
-      </button>
+      </Button>
     </div>
   )
 }
@@ -169,13 +168,11 @@ function ExperienceEntryEditor({ entry, index, idPrefix, onChange, onRemove }: E
               </button>
             </div>
           ))}
-          <button
-            type="button"
-            className="btn-text"
+          <Button variant="ghost" small
             onClick={() => onChange({ ...entry, bullets: [...entry.bullets, ''] })}
           >
             + Add bullet
-          </button>
+          </Button>
         </div>
       </div>
     </div>

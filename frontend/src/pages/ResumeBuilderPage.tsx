@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { Page } from '../components/ui/Page'
+import { useCallback, useEffect, useState } from 'react'
 import { resumeApi } from '../lib/api'
 import type { ResumeContent } from '../lib/types'
 import { emptyResumeContent } from '../lib/types'
@@ -33,7 +34,7 @@ export function ResumeBuilderPage() {
   const [reloadToken, setReloadToken] = useState(0)
 
   // Track the server-side content to detect unsaved changes
-  const serverContent = useRef<ResumeContent>(emptyResumeContent())
+  const [serverContent, setServerContent] = useState<ResumeContent>(emptyResumeContent)
 
   useEffect(() => {
     let cancelled = false
@@ -43,7 +44,7 @@ export function ResumeBuilderPage() {
         if (cancelled) return
         if (resume) {
           setContent(resume.content)
-          serverContent.current = resume.content
+          setServerContent(resume.content)
           setLastSaved(resume.updatedAt)
         }
         setLoadState({ status: 'ready' })
@@ -86,7 +87,7 @@ export function ResumeBuilderPage() {
     setSaveError(null)
     try {
       const saved = await resumeApi.save(content)
-      serverContent.current = saved.content
+      setServerContent(saved.content)
       setContent(saved.content)
       setLastSaved(saved.updatedAt)
     } catch (error) {
@@ -120,7 +121,7 @@ export function ResumeBuilderPage() {
 
   if (loadState.status === 'loading') {
     return (
-      <div className="page" aria-busy="true">
+      <Page width="standard" aria-busy="true">
         <ResumeHeader isSaving={false} onSave={handleSave} hasUnsavedChanges={false} />
         <div className="section-stack">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -132,27 +133,27 @@ export function ResumeBuilderPage() {
             </div>
           ))}
         </div>
-      </div>
+      </Page>
     )
   }
 
   if (loadState.status === 'error') {
     return (
-      <div className="page">
+      <Page width="standard">
         <ResumeHeader isSaving={false} onSave={handleSave} hasUnsavedChanges={false} />
         <EmptyState
           title="Could not load resume"
           body={loadState.message}
           action={<Button onClick={handleRetry}>Retry</Button>}
         />
-      </div>
+      </Page>
     )
   }
 
-  const hasUnsavedChanges = JSON.stringify(content) !== JSON.stringify(serverContent.current)
+  const hasUnsavedChanges = JSON.stringify(content) !== JSON.stringify(serverContent)
 
   return (
-    <div className="page page--resume">
+    <Page width="standard">
       <ResumeHeader
         isSaving={isSaving}
         onSave={handleSave}
@@ -244,7 +245,7 @@ export function ResumeBuilderPage() {
           })}
         </div>
       </div>
-    </div>
+    </Page>
   )
 }
 

@@ -1,3 +1,4 @@
+import { Button } from '../ui/Button'
 import type { ResumeEducation } from '../../lib/types'
 import { emptyEducation } from '../../lib/types'
 import { CloseIcon } from './CloseIcon'
@@ -26,13 +27,11 @@ export function EducationEditor({ value, onChange, idPrefix }: ListProps) {
           onRemove={() => onChange(value.filter((_, idx) => idx !== i))}
         />
       ))}
-      <button
-        type="button"
-        className="btn btn-secondary editor-add-btn"
+      <Button className="editor-add-btn"
         onClick={() => onChange([...value, emptyEducation()])}
       >
         + Add education
-      </button>
+      </Button>
     </div>
   )
 }
@@ -171,13 +170,11 @@ function EducationEntryEditor({ entry, index, idPrefix, onChange, onRemove }: En
               </button>
             </div>
           ))}
-          <button
-            type="button"
-            className="btn-text"
+          <Button variant="ghost" small
             onClick={() => onChange({ ...entry, details: [...entry.details, ''] })}
           >
             + Add detail
-          </button>
+          </Button>
         </div>
       </div>
     </div>

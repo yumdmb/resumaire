@@ -55,7 +55,7 @@
 .btn-secondary {
   background: transparent;
   color: var(--text-primary);
-  border-color: var(--border-strong);
+  border-color: var(--control-border);
 }
 
 .btn-secondary:hover:not(:disabled) {
@@ -228,24 +228,6 @@
 
 /* ─── Text button ────────────────────────────────────────────── */
 
-.btn-text {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  border: none;
-  background: none;
-  color: var(--accent-text);
-  cursor: pointer;
-  font-size: 12.5px;
-  font-weight: 500;
-  padding: var(--space-1) 0;
-  transition: opacity 100ms ease;
-}
-
-.btn-text:hover {
-  opacity: 0.8;
-}
-
 /* ─── Code / mono ────────────────────────────────────────────── */
 
 code {
@@ -343,7 +325,7 @@ code {
   font-size: 13.5px;
   color: var(--text-primary);
   background: var(--surface-raised);
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-sm);
   padding: 8px 10px;
   transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
@@ -425,12 +407,6 @@ code {
   border-radius: 6px;
 }
 
-.skeleton-pill {
-  height: 18px;
-  width: 72px;
-  border-radius: 999px;
-}
-
 .skeleton-card {
   height: 140px;
   border-radius: var(--radius-lg);
@@ -450,7 +426,6 @@ code {
   background: var(--warning-bg);
   border: 1px solid var(--warning-border);
 }
-
 
 .form-required {
   color: var(--accent-text);
@@ -527,4 +502,63 @@ code {
 .form-hint {
   font-size: 12px;
   color: var(--text-tertiary);
+}
+
+/* ─── Stepper ────────────────────────────────────────────────── */
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  list-style: none;
+  margin: 0 0 var(--space-6);
+  padding: 0;
+  flex-wrap: wrap;
+}
+
+.stepper-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+.stepper-item + .stepper-item::before {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: var(--border-strong);
+  margin-right: var(--space-2);
+}
+
+.stepper-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--control-border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.stepper-item--current {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.stepper-item--current .stepper-num {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.stepper-item--done {
+  color: var(--text-secondary);
+}
+
+.stepper-item--done .stepper-num {
+  border-color: var(--text-secondary);
 }

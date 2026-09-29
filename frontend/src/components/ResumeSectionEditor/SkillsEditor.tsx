@@ -1,3 +1,4 @@
+import { Button } from '../ui/Button'
 import { useState } from 'react'
 import type { ResumeSkillGroup } from '../../lib/types'
 
@@ -56,9 +57,9 @@ function TagList({ items, onChange, label }: TagListProps) {
           }}
           aria-label={label}
         />
-        <button type="button" className="btn btn-secondary" onClick={add}>
+        <Button onClick={add}>
           Add
-        </button>
+        </Button>
       </div>
       {items.length > 0 && (
         <div className="skills-list">
@@ -95,15 +96,13 @@ export function SkillsEditor({ skills, skillGroups, onChange }: Props) {
           label="New skill"
         />
         <div>
-          <button
-            type="button"
-            className="btn btn-secondary"
+          <Button
             onClick={() =>
               onChange(skills, [{ category: skills.length > 0 ? 'Skills' : '', items: skills }])
             }
           >
             Group skills into categories
-          </button>
+          </Button>
         </div>
       </div>
     )
@@ -127,14 +126,12 @@ export function SkillsEditor({ skills, skillGroups, onChange }: Props) {
               }
               aria-label={`Category ${i + 1} name`}
             />
-            <button
-              type="button"
-              className="btn btn-secondary"
+            <Button
               onClick={() => update(skillGroups.filter((_, j) => j !== i))}
               aria-label={`Remove category ${group.category || i + 1}`}
             >
               Remove
-            </button>
+            </Button>
           </div>
           <TagList
             items={group.items}
@@ -144,13 +141,11 @@ export function SkillsEditor({ skills, skillGroups, onChange }: Props) {
         </div>
       ))}
       <div>
-        <button
-          type="button"
-          className="btn btn-secondary"
+        <Button
           onClick={() => update([...skillGroups, { category: '', items: [] }])}
         >
           Add category
-        </button>
+        </Button>
       </div>
     </div>
   )

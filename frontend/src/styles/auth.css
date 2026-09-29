@@ -1,12 +1,56 @@
 /* ─── Auth pages ─────────────────────────────────────────────── */
 
 .auth-page {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.auth-brand {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-10);
+  padding: var(--space-10);
+  background: var(--surface-sunken);
+  border-right: 1px solid var(--border);
+}
+
+.auth-brand-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--accent-text);
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.auth-brand-quote {
+  margin: 0;
+  max-width: 28ch;
+}
+
+.auth-brand-quote p {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.auth-brand-quote footer {
+  margin-top: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.auth-main {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
   padding: var(--space-6);
-  background: var(--bg);
 }
 
 .auth-card {
@@ -17,6 +61,23 @@
   gap: var(--space-5);
 }
 
+.auth-logo-link {
+  display: none;
+  color: var(--accent-text);
+}
+
+@media (max-width: 800px) {
+  .auth-page {
+    grid-template-columns: 1fr;
+  }
+  .auth-brand {
+    display: none;
+  }
+  .auth-logo-link {
+    display: inline-flex;
+  }
+}
+
 .auth-header {
   display: flex;
   flex-direction: column;
@@ -25,14 +86,11 @@
   text-align: center;
 }
 
-.auth-logo-icon {
-  color: var(--accent);
-}
-
 .auth-title {
-  font-size: 18px;
+  font-family: var(--font-display);
+  font-size: 24px;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
 }
 
@@ -93,65 +151,5 @@
 
 @keyframes auth-spin {
   to { transform: rotate(360deg); }
-}
-
-/* ─── Landing page ───────────────────────────────────────────── */
-
-.landing {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  padding: var(--space-8);
-  background: var(--bg);
-}
-
-.landing-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  max-width: 440px;
-  gap: var(--space-5);
-}
-
-.landing-logo {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  color: var(--accent);
-}
-
-.landing-wordmark {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: -0.01em;
-}
-
-.landing-heading {
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.03em;
-  line-height: 1.25;
-  color: var(--text-primary);
-}
-
-.landing-body {
-  font-size: 14px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  max-width: 38ch;
-}
-
-.landing-actions {
-  display: flex;
-  gap: var(--space-3);
-  margin-top: var(--space-2);
-}
-
-.landing-actions .btn {
-  padding: 10px 20px;
-  font-size: 13.5px;
 }
 

@@ -26,20 +26,20 @@ Each numbered group is one phase and one commit. Every group must leave `npm run
 ## 3. Resume builder and Tailoring
 
 - [x] 3.1 Restyle Resume builder: sticky section index with scroll-spy, calmer entry cards, collapse/expand entries, shared Field/Button; verify existing `ResumeBuilderPage` tests pass (updated as needed) and screenshot both themes
-- [ ] 3.2 Restyle remaining resume section editors (skills groups, bullets, projects, activities, links, certifications) to the new components; verify by editing and saving each section type in the browser
-- [ ] 3.3 Add a `Stepper` component and apply it to `TailoringPage` (select job, review, saved) driven by existing state; verify with updated `TailoringPage` tests that the current step is exposed (`aria-current="step"`)
-- [ ] 3.4 Redesign suggestion cards with before/after blocks, clear accepted/rejected states and non-colour cues, and restyle gap notes, keywords tab, save bar and saved confirmation; verify updated `AiReviewPanel` tests and a screenshot of a review with mixed states
-- [ ] 3.5 Restyle Resume preview as paper-on-desk matching the Typst output proportions; verify preview and PDF export still work (manual export from the browser)
+- [x] 3.2 Restyle remaining resume section editors (skills groups, bullets, projects, activities, links, certifications) to the new components; verify by editing and saving each section type in the browser
+- [x] 3.3 Add a `Stepper` component and apply it to `TailoringPage` (select job, review, saved) driven by existing state; verify with updated `TailoringPage` tests that the current step is exposed (`aria-current="step"`)
+- [x] 3.4 Redesign suggestion cards with before/after blocks, clear accepted/rejected states and non-colour cues, and restyle gap notes, keywords tab, save bar and saved confirmation; verify updated `AiReviewPanel` tests and a screenshot of a review with mixed states
+- [x] 3.5 Restyle Resume preview as paper-on-desk matching the Typst output proportions; verify preview and PDF export still work (manual export from the browser)
 
 ## 4. Landing and auth
 
-- [ ] 4.1 Build the landing page: hero with a resume/tailoring illustration made in CSS/SVG, three-step how-it-works, honesty statement, primary/secondary CTAs; verify at desktop and 375px and that CTAs route to register/login
-- [ ] 4.2 Build split-layout Login and Register with brand panel (hidden on mobile), inline validation messages and shared Field/Button; verify existing auth behaviour (submit, error display, redirect) manually and via any existing tests
+- [x] 4.1 Build the landing page: hero with a resume/tailoring illustration made in CSS/SVG, three-step how-it-works, honesty statement, primary/secondary CTAs; verify at desktop and 375px and that CTAs route to register/login
+- [x] 4.2 Build split-layout Login and Register with brand panel (hidden on mobile), inline validation messages and shared Field/Button; verify existing auth behaviour (submit, error display, redirect) manually and via any existing tests
 
 ## 5. Dark mode, responsive and accessibility audit
 
-- [ ] 5.1 Verify every screen in light and dark (Landing, Login, Register, Jobs board/list, Job detail, Job form, Resume, Tailoring steps, Preview); fix any hard-coded colours found by grepping for `#` and `oklch(` outside token files
-- [ ] 5.2 Measure contrast for text, secondary text, StatusMark labels, accent and accent-text on their surfaces in both themes (script or devtools) and fix values under AA; record results in the commit message
-- [ ] 5.3 Keyboard-only pass over every screen (tab order, visible focus, menu and drag alternatives, dialogs, Escape) and a reduced-motion pass; fix findings
-- [ ] 5.4 Responsive pass at 375, 768 and 1280px including board horizontal scroll and bottom nav; fix overflow issues
+- [x] 5.1 Verify every screen in light and dark (Landing, Login, Register, Jobs board/list, Job detail, Job form, Resume, Tailoring steps, Preview); fix any hard-coded colours found by grepping for `#` and `oklch(` outside token files
+- [x] 5.2 Measure contrast for text, secondary text, StatusMark labels, accent and accent-text on their surfaces in both themes (script or devtools) and fix values under AA; record results in the commit message
+- [x] 5.3 Keyboard-only pass over every screen (tab order, visible focus, menu and drag alternatives, dialogs, Escape) and a reduced-motion pass; fix findings
+- [x] 5.4 Responsive pass at 375, 768 and 1280px including board horizontal scroll and bottom nav; fix overflow issues
 - [ ] 5.5 Final integration check: `npm run build`, `npm run lint`, `npm test`, delete leftover dead CSS, refresh the README screenshots (`resumaire-*.png`) and mention the theme toggle in the README

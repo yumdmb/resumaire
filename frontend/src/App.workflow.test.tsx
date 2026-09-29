@@ -430,8 +430,10 @@ function createJobDetail(overrides: Partial<JobDetail> = {}): JobDetail {
 }
 
 function toSummary(job: JobDetail): JobSummary {
-  const { tailoredResumeVersions: _tailoredResumeVersions, description: _description, ...summary } = job
-  return summary
+  const summary: Record<string, unknown> = { ...job }
+  delete summary.tailoredResumeVersions
+  delete summary.description
+  return summary as unknown as JobSummary
 }
 
 function toVersionSummary(detail: TailoredResumeDetail) {

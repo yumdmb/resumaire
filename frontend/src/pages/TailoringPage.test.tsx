@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -48,12 +48,40 @@ describe('TailoringPage', () => {
 
     await user.click(screen.getByRole('button', { name: /^save version$/i }))
 
-    await screen.findByText(/saved/i)
+    await screen.findByText('Version saved')
     expect(saveBodies).toHaveLength(2)
     expect(saveBodies[1]).toMatchObject({
       acceptedSuggestionIds: ['suggestion-1'],
       suggestionEdits: { 'suggestion-1': 'Builds reliable React APIs for hiring teams.' },
     })
+  })
+
+  it('exposes the current step and advances it through review and save', async () => {
+    window.localStorage.setItem(AUTH_TOKEN_KEY, 'token')
+    const user = userEvent.setup()
+    stubApi((url, init) =>
+      url.endsWith('/tailoring/versions') && init?.method === 'POST'
+        ? json({ data: savedVersion(), message: null }, 201)
+        : null,
+    )
+
+    render(
+      <MemoryRouter initialEntries={[`/tailor?jobId=${JOB_ID}`]}>
+        <TailoringPage />
+      </MemoryRouter>,
+    )
+    const steps = () => screen.getByRole('list', { name: /tailoring steps/i })
+    expect(within(steps()).getByText('Choose job').closest('li')).toHaveAttribute('aria-current', 'step')
+
+    await user.click(await screen.findByRole('button', { name: /ai-assisted tailoring/i }))
+    await screen.findByRole('button', { name: /^save version$/i })
+    expect(within(steps()).getByText('Review').closest('li')).toHaveAttribute('aria-current', 'step')
+
+    await user.click(screen.getByRole('button', { name: /^save version$/i }))
+    await screen.findByText('Version saved')
+    await waitFor(() =>
+      expect(within(steps()).getByText('Saved').closest('li')).toHaveAttribute('aria-current', 'step'),
+    )
   })
 
   it('returns to job selection without an error when generation is cancelled', async () => {

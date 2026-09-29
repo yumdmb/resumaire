@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Button } from '../../components/ui/Button'
+import { TextField } from '../../components/ui/Field'
 import type { ResumeContent, TailoringAnalysis, TailoringSuggestionBatch } from '../../lib/types'
 import { applyAcceptedSuggestions } from './applyAcceptedSuggestions'
 import { SuggestionCard } from './SuggestionCard'
@@ -78,22 +80,12 @@ export function AiReviewPanel({
           </span>
         </div>
         <div className="tailor-summary-actions">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={acceptAll}
-            style={{ fontSize: 12, padding: '4px 10px' }}
-          >
+          <Button small onClick={acceptAll}>
             Accept all
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={rejectAll}
-            style={{ fontSize: 12, padding: '4px 10px' }}
-          >
+          </Button>
+          <Button small onClick={rejectAll}>
             Reject all
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -192,13 +184,10 @@ export function AiReviewPanel({
 
       {/* Save bar */}
       <div className="tailor-save-bar">
-        <div className="form-field" style={{ flex: 1, maxWidth: 320 }}>
-          <label className="form-label" htmlFor="ai-version-name">
-            Version name
-          </label>
-          <input
+        <div className="tailor-save-name">
+          <TextField
             id="ai-version-name"
-            className="form-input"
+            label="Version name"
             placeholder="e.g. Senior Frontend Engineer v1"
             value={versionName}
             onChange={(e) => setVersionName(e.target.value)}
@@ -206,16 +195,15 @@ export function AiReviewPanel({
         </div>
         <div className="tailor-save-actions">
           {acceptedCount === 0 && suggestions.length > 0 && (
-            <span className="prose-muted" role="status" style={{ alignSelf: 'center', fontSize: 12 }}>
+            <span className="prose-muted tailor-save-note" role="status">
               No suggestions accepted. Saving keeps your base resume unchanged.
             </span>
           )}
-          <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={isSaving}>
+          <Button onClick={onCancel} disabled={isSaving}>
             Cancel
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary"
+          </Button>
+          <Button
+            variant="primary"
             disabled={isSaving}
             onClick={() =>
               onSave(
@@ -226,7 +214,7 @@ export function AiReviewPanel({
             }
           >
             {isSaving ? 'Saving…' : 'Save version'}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

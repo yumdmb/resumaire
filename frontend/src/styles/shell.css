@@ -115,11 +115,21 @@
 }
 
 .page {
-  max-width: 940px;
+  width: 100%;
+  max-width: var(--page-standard);
+  margin-inline: auto;
   padding: var(--space-10) var(--space-10) var(--space-12);
 }
 
-.page--wide {
+.page--narrow {
+  max-width: var(--page-narrow);
+}
+
+.page--standard {
+  max-width: var(--page-standard);
+}
+
+.page--full {
   max-width: none;
 }
 

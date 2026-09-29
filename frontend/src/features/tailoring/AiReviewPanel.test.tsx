@@ -89,6 +89,10 @@ describe('AiReviewPanel', () => {
     await user.type(screen.getByLabelText(/^version name$/i), 'React role')
     await user.click(screen.getByRole('button', { name: /^save version$/i }))
 
+    // Decisions are stated in text, not only colour.
+    expect(screen.getAllByText(/Accepted/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Rejected/).length).toBeGreaterThan(0)
+
     expect(onSave).toHaveBeenCalledTimes(1)
     const [savedContent, savedSuggestions, versionName] = onSave.mock.calls[0] as [
       ResumeContent,

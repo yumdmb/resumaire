@@ -1,3 +1,4 @@
+import { Button } from '../ui/Button'
 import type { ResumeProject } from '../../lib/types'
 import { emptyProject } from '../../lib/types'
 import { BulletsEditor } from './BulletsEditor'
@@ -26,13 +27,11 @@ export function ProjectsEditor({ value, onChange, idPrefix }: ListProps) {
           onRemove={() => onChange(value.filter((_, idx) => idx !== i))}
         />
       ))}
-      <button
-        type="button"
-        className="btn btn-secondary editor-add-btn"
+      <Button className="editor-add-btn"
         onClick={() => onChange([...value, emptyProject()])}
       >
         + Add project
-      </button>
+      </Button>
     </div>
   )
 }

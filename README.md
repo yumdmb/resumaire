@@ -7,6 +7,8 @@ Resumaire is a split application:
 - `tests/`: backend integration tests
 - `openspec/`: project specs, design, and task tracking
 
+The UI ships light and dark themes. It follows the system preference by default; the theme toggle in the navigation rail overrides it and is remembered on that device.
+
 The app uses PostgreSQL for local development and ASP.NET Identity for authentication.
 
 ## Prerequisites
