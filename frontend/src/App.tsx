@@ -1,5 +1,6 @@
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { ThemeToggle } from './components/ui/ThemeToggle'
 import { useAuth } from './lib/auth'
 import { DashboardPage } from './pages/DashboardPage'
 import { JobDetailPage } from './pages/JobDetailPage'
@@ -17,7 +18,7 @@ const nav = [
     end: true,
     label: 'Jobs',
     icon: (
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <rect x="2" y="4" width="12" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
         <path d="M5 4V3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" stroke="currentColor" strokeWidth="1.4" />
         <path d="M2 8h12" stroke="currentColor" strokeWidth="1.4" />
@@ -28,7 +29,7 @@ const nav = [
     to: '/resume',
     label: 'Resume',
     icon: (
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <rect x="3" y="1.5" width="10" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
         <path d="M5.5 5.5h5M5.5 8h5M5.5 10.5h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
       </svg>
@@ -38,7 +39,7 @@ const nav = [
     to: '/tailor',
     label: 'Tailoring',
     icon: (
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <path d="M2 8h3l2-5 2 10 2-5h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     ),
@@ -50,25 +51,15 @@ function AppShell() {
 
   return (
     <div className="app-shell">
-      <header className="topbar">
-        <div className="topbar-logo">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-            <rect x="1.5" y="1.5" width="13" height="13" rx="3" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M4.5 8h7M4.5 5.5h4M4.5 10.5h5.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-          </svg>
-          Resumaire
+      <aside className="rail">
+        <div className="rail-brand" aria-label="Resumaire">
+          <span className="rail-mark" aria-hidden="true">
+            R
+          </span>
+          <span className="rail-wordmark">Resumaire</span>
         </div>
-        <div className="topbar-divider" />
-        <span className="topbar-meta">MVP</span>
-        <div className="topbar-spacer" />
-        <button type="button" className="btn-text topbar-logout" onClick={logout}>
-          Sign out
-        </button>
-      </header>
 
-      <aside className="sidebar">
-        <nav className="sidebar-section" aria-label="Primary">
-          <p className="sidebar-label">Workspace</p>
+        <nav className="rail-nav" aria-label="Primary">
           {nav.map((item) => (
             <NavLink
               key={item.to}
@@ -81,6 +72,18 @@ function AppShell() {
             </NavLink>
           ))}
         </nav>
+
+        <div className="rail-spacer" />
+
+        <div className="rail-foot">
+          <ThemeToggle />
+          <button type="button" className="rail-button" onClick={logout}>
+            <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M6 2.5H3.5a1 1 0 0 0-1 1v9a1 1 0 0 0 1 1H6M10 5l3 3-3 3M13 8H6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            Sign out
+          </button>
+        </div>
       </aside>
 
       <main className="main">

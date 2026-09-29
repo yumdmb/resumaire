@@ -33,6 +33,7 @@ export function ThemeToggle() {
           />
         </svg>
       )}
+      {resolved === 'dark' ? 'Light' : 'Dark'}
     </button>
   )
 }

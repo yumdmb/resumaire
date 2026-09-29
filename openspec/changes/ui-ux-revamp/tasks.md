@@ -13,15 +13,15 @@ Each numbered group is one phase and one commit. Every group must leave `npm run
 
 ## 2. Shell, Jobs board, Job detail and form
 
-- [ ] 2.1 Replace topbar+sidebar with the left rail (wordmark, Jobs/Resume/Tailoring, ThemeToggle, Sign out), bottom nav under 800px, remove the MVP tag; verify at desktop and 375px widths in the browser and that active-route marking works
-- [ ] 2.2 Install `@dnd-kit/core` and write pure `groupJobs`/filter/search/sort helpers with unit tests (status grouping, title+company search case-insensitive, each sort option, empty input)
-- [ ] 2.3 Build `StatusMenu` (menu-button, arrow keys, Escape returns focus, portal render) replacing `StatusDropdown`; verify with tests for open, keyboard select, Escape, and that selecting never triggers navigation
-- [ ] 2.4 Add `useJobStatusChange` (optimistic update, revert on failure, failure toast with Retry, stale-response guard); verify with tests for success, failure+revert+toast, and retry re-calling `patchStatus`
-- [ ] 2.5 Build the Jobs board: five status columns with counts and empty hints, draggable cards (pointer with activation distance, keyboard and touch sensors), stretched-link card navigation, StatusMenu on each card; verify with a test that a drop calls `patchStatus` once with the target status, a plain click navigates, and by dragging in the browser
-- [ ] 2.6 Add view toggle (board/list), search, sort, status filter and persisted preferences to `DashboardPage`; restyle the list view with StatusMark; verify with page tests for view persistence, search and sort, and screenshot both views in light and dark
-- [ ] 2.7 Update the existing dashboard-related and shell tests for the new markup and remove `StatusDropdown` and its CSS; verify no references remain (grep) and the suite passes
-- [ ] 2.8 Redesign Job detail as two columns with the status timeline (current stage marked) and StatusMenu in the sidebar; verify with a test that Interview marks the Interview stage current, and screenshot
-- [ ] 2.9 Restyle Job form with sections and a sticky action bar using shared Field/Button; verify create and edit still submit (existing behaviour) and screenshot at 375px
+- [x] 2.1 Replace topbar+sidebar with the left rail (wordmark, Jobs/Resume/Tailoring, ThemeToggle, Sign out), bottom nav under 800px, remove the MVP tag; verify at desktop and 375px widths in the browser and that active-route marking works
+- [x] 2.2 Install `@dnd-kit/core` and write pure `groupJobs`/filter/search/sort helpers with unit tests (status grouping, title+company search case-insensitive, each sort option, empty input)
+- [x] 2.3 Build `StatusMenu` (menu-button, arrow keys, Escape returns focus, portal render) replacing `StatusDropdown`; verify with tests for open, keyboard select, Escape, and that selecting never triggers navigation
+- [x] 2.4 Add `useJobStatusChange` (optimistic update, revert on failure, failure toast with Retry, stale-response guard); verify with tests for success, failure+revert+toast, and retry re-calling `patchStatus`
+- [x] 2.5 Build the Jobs board: five status columns with counts and empty hints, draggable cards (pointer with activation distance, keyboard and touch sensors), stretched-link card navigation, StatusMenu on each card; verify with a test that a drop calls `patchStatus` once with the target status, a plain click navigates, and by dragging in the browser
+- [x] 2.6 Add view toggle (board/list), search, sort, status filter and persisted preferences to `DashboardPage`; restyle the list view with StatusMark; verify with page tests for view persistence, search and sort, and screenshot both views in light and dark
+- [x] 2.7 Update the existing dashboard-related and shell tests for the new markup and remove `StatusDropdown` and its CSS; verify no references remain (grep) and the suite passes
+- [x] 2.8 Redesign Job detail as two columns with the status timeline (current stage marked) and StatusMenu in the sidebar; verify with a test that Interview marks the Interview stage current, and screenshot
+- [x] 2.9 Restyle Job form with sections and a sticky action bar using shared Field/Button; verify create and edit still submit (existing behaviour) and screenshot at 375px
 
 ## 3. Resume builder and Tailoring
 

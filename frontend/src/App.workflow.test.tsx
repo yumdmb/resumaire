@@ -4,6 +4,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { AuthProvider } from './lib/auth'
+import { ThemeProvider } from './lib/theme'
+import { ToastProvider } from './components/ui/Toast'
 import type {
   BaseResumeResponse,
   JobDetail,
@@ -56,7 +58,7 @@ describe('workflow verification UI states', () => {
     expect(await screen.findByText('Frontend Lead')).toBeInTheDocument()
     expect(screen.getByText('Backend Engineer')).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('tab', { name: /^interview$/i }))
+    await userEvent.click(screen.getByRole('button', { name: /^interview$/i }))
 
     await waitFor(() => {
       expect(screen.getByText('Frontend Lead')).toBeInTheDocument()
@@ -225,11 +227,11 @@ describe('workflow verification UI states', () => {
 
 function renderApp(initialEntry: string) {
   return render(
-    <MemoryRouter initialEntries={[initialEntry]}>
+    <ThemeProvider><ToastProvider><MemoryRouter initialEntries={[initialEntry]}>
       <AuthProvider>
         <App />
       </AuthProvider>
-    </MemoryRouter>,
+    </MemoryRouter></ToastProvider></ThemeProvider>,
   )
 }
 

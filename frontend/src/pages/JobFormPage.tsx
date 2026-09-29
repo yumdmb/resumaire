@@ -1,6 +1,8 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { ApiError, jobsApi } from '../lib/api'
+import { Button, ButtonLink } from '../components/ui/Button'
+import { TextField } from '../components/ui/Field'
 import {
   JOB_STATUSES,
   type FieldErrors,
@@ -295,12 +297,12 @@ export function JobFormPage({ mode }: { mode: Mode }) {
         </div>
 
         <div className="form-actions">
-          <Link to={backHref} className="btn btn-secondary">
+          <ButtonLink to={backHref} variant="secondary">
             Cancel
-          </Link>
-          <button type="submit" className="btn btn-primary" disabled={isSaving}>
+          </ButtonLink>
+          <Button type="submit" variant="primary" disabled={isSaving}>
             {isSaving ? 'Saving' : isEdit ? 'Save changes' : 'Add job'}
-          </button>
+          </Button>
         </div>
       </form>
     </div>
@@ -353,21 +355,15 @@ function Field({
   error?: string[]
 }) {
   return (
-    <div className="form-field">
-      <label className="form-label" htmlFor={field}>
-        {label}
-        {required ? <span className="form-required"> *</span> : null}
-      </label>
-      <input
-        id={field}
-        type={type}
-        className="form-input"
-        placeholder={placeholder}
-        required={required}
-        {...bind}
-      />
-      <FieldError messages={error} />
-    </div>
+    <TextField
+      id={field}
+      label={label}
+      type={type}
+      placeholder={placeholder}
+      required={required}
+      error={error}
+      {...bind}
+    />
   )
 }
 

@@ -1,9 +1,15 @@
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError, exportApi, jobsApi } from '../lib/api'
 import { formatLongDate } from '../lib/format'
 import type { JobDetail, JobStatus, TailoredResumeVersion } from '../lib/types'
-import { StatusDropdown } from '../components/StatusDropdown'
+import { StatusMenu } from '../components/StatusMenu'
+import { Button, ButtonLink } from '../components/ui/Button'
+import { Card } from '../components/ui/Card'
+import { EmptyState } from '../components/ui/EmptyState'
+import { Skeleton } from '../components/ui/Skeleton'
+import { StatusTimeline } from '../features/jobs/StatusTimeline'
+import { useJobStatusChange } from '../features/jobs/useJobStatusChange'
 
 type LoadState =
   | { status: 'loading' }
@@ -17,7 +23,6 @@ export function JobDetailPage() {
   const [reloadToken, setReloadToken] = useState(0)
   const [state, setState] = useState<LoadState>({ status: 'loading' })
   const [isDeleting, setIsDeleting] = useState(false)
-  const [isPatchingStatus, setIsPatchingStatus] = useState(false)
   const [exportingVersions, setExportingVersions] = useState<Set<string>>(new Set())
   const [attachingVersion, setAttachingVersion] = useState<string | null>(null)
   const [exportError, setExportError] = useState<string | null>(null)
@@ -79,21 +84,22 @@ export function JobDetailPage() {
     }
   }
 
-  async function handleStatusChange(newStatus: JobStatus) {
-    if (state.status !== 'ready') return
-
-    const previousJob = state.job
-    setState({ status: 'ready', job: { ...state.job, status: newStatus } })
-    setIsPatchingStatus(true)
-
-    try {
-      await jobsApi.patchStatus(state.job.id, newStatus)
-    } catch {
-      setState({ status: 'ready', job: previousJob })
-    } finally {
-      setIsPatchingStatus(false)
-    }
-  }
+  const jobRef = useRef<JobDetail | null>(null)
+  useEffect(() => {
+    jobRef.current = state.status === 'ready' ? state.job : null
+  }, [state])
+  const getStatus = useCallback(
+    (id: string) => (jobRef.current?.id === id ? jobRef.current.status : undefined),
+    [],
+  )
+  const setStatus = useCallback((id: string, next: JobStatus) => {
+    setState((current) =>
+      current.status === 'ready' && current.job.id === id
+        ? { status: 'ready', job: { ...current.job, status: next } }
+        : current,
+    )
+  }, [])
+  const { changeStatus, pending } = useJobStatusChange({ getStatus, setStatus })
 
   async function handleExportPdf(versionId: string) {
     setExportError(null)
@@ -146,23 +152,17 @@ export function JobDetailPage() {
             <Link to="/" className="back-link">
               ← Jobs
             </Link>
-            <div
-              className="skeleton skeleton-heading"
-              style={{ width: '40%', marginTop: 8 }}
-            />
-            <div
-              className="skeleton skeleton-line"
-              style={{ width: '24%', marginTop: 10 }}
-            />
+            <Skeleton variant="heading" width="40%" style={{ marginTop: 8 }} />
+            <Skeleton width="24%" style={{ marginTop: 10 }} />
           </div>
         </div>
         <div className="detail-grid">
           <div className="detail-main">
-            <div className="skeleton skeleton-card" />
-            <div className="skeleton skeleton-card" />
+            <Skeleton variant="card" />
+            <Skeleton variant="card" />
           </div>
           <div className="detail-aside">
-            <div className="skeleton skeleton-card" />
+            <Skeleton variant="card" />
           </div>
         </div>
       </div>
@@ -182,15 +182,15 @@ export function JobDetailPage() {
             </h1>
           </div>
         </div>
-        <div className="empty-state">
-          <p className="empty-state-title">No job with this ID</p>
-          <p className="empty-state-body">
-            It may have been removed, or the link is incorrect.
-          </p>
-          <Link to="/" className="btn btn-secondary">
-            Back to jobs
-          </Link>
-        </div>
+        <EmptyState
+          title="No job with this ID"
+          body="It may have been removed, or the link is incorrect."
+          action={
+            <ButtonLink to="/" variant="secondary">
+              Back to jobs
+            </ButtonLink>
+          }
+        />
       </div>
     )
   }
@@ -208,12 +208,10 @@ export function JobDetailPage() {
             </h1>
           </div>
         </div>
-        <div className="empty-state">
-          <p className="empty-state-title">{state.message}</p>
-          <button type="button" className="btn btn-secondary" onClick={handleRetry}>
-            Retry
-          </button>
-        </div>
+        <EmptyState
+          title={state.message}
+          action={<Button onClick={handleRetry}>Retry</Button>}
+        />
       </div>
     )
   }
@@ -231,35 +229,30 @@ export function JobDetailPage() {
           <Link to="/" className="back-link">
             ← Jobs
           </Link>
-          <h1 className="page-title" style={{ marginTop: 4 }}>
-            {job.title}
-          </h1>
-          <p className="page-subtitle">{job.company}</p>
+          <p className="detail-company">{job.company}</p>
+          <h1 className="page-title">{job.title}</h1>
         </div>
         <div className="page-actions">
-          <StatusDropdown
-            value={status}
-            onChange={handleStatusChange}
-            disabled={isPatchingStatus}
-          />
-          <Link to={`/jobs/${job.id}/edit`} className="btn btn-secondary">
+          <ButtonLink to={`/jobs/${job.id}/edit`} variant="secondary">
             Edit
-          </Link>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={handleDelete}
-            disabled={isDeleting}
-          >
+          </ButtonLink>
+          <Button variant="danger" onClick={handleDelete} disabled={isDeleting}>
             {isDeleting ? 'Deleting' : 'Delete'}
-          </button>
-          <Link
-            to={`/tailor?jobId=${job.id}`}
-            className="btn btn-primary"
-          >
+          </Button>
+          <ButtonLink to={`/tailor?jobId=${job.id}`} variant="primary">
             Tailor resume
-          </Link>
+          </ButtonLink>
         </div>
+      </div>
+
+      <div className="detail-status">
+        <StatusTimeline status={status} />
+        <StatusMenu
+          value={status}
+          onChange={(next) => changeStatus(job.id, next)}
+          disabled={pending.has(job.id)}
+          label={job.title}
+        />
       </div>
 
       {exportError && (
@@ -270,156 +263,118 @@ export function JobDetailPage() {
 
       <div className="detail-grid">
         <div className="detail-main">
-          <div className="card">
-            <div className="card-header">
-              <span className="card-title">Job description</span>
-            </div>
-            <div className="card-body">
-              {job.description.trim().length > 0 ? (
-                <p className="prose">{job.description}</p>
-              ) : (
-                <p className="prose-muted">No description provided.</p>
-              )}
-            </div>
-          </div>
+          <Card title="Job description">
+            {job.description.trim().length > 0 ? (
+              <p className="prose">{job.description}</p>
+            ) : (
+              <p className="prose-muted">No description provided.</p>
+            )}
+          </Card>
 
-          <div className="card">
-            <div className="card-header">
-              <span className="card-title">Tailored versions</span>
-              <Link
-                to={`/tailor?jobId=${job.id}`}
-                className="btn btn-secondary"
-                style={{ fontSize: 12, padding: '4px 10px' }}
-              >
+          <Card
+            title="Tailored versions"
+            actions={
+              <ButtonLink to={`/tailor?jobId=${job.id}`} variant="secondary" small>
                 New version
-              </Link>
-            </div>
-            <div className="card-body">
-              {job.tailoredResumeVersions.length === 0 ? (
-                <div className="empty-inline">
-                  <p className="empty-state-title">No tailored versions yet</p>
-                  <p className="empty-state-body">
-                    Tailor your resume for this role to save a version.
-                  </p>
-                </div>
-              ) : (
-                <ul className="version-list">
-                  {job.tailoredResumeVersions.map((version) => (
-                    <VersionRow
-                      key={version.id}
-                      version={version}
-                      jobId={job.id}
-                      isSelected={version.id === job.selectedTailoredResumeId}
-                      isExporting={exportingVersions.has(version.id)}
-                      isAttaching={attachingVersion === version.id}
-                      onExport={handleExportPdf}
-                      onAttach={handleAttachVersion}
-                    />
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
+              </ButtonLink>
+            }
+          >
+            {job.tailoredResumeVersions.length === 0 ? (
+              <div className="empty-inline">
+                <p className="empty-state-title">No tailored versions yet</p>
+                <p className="empty-state-body">
+                  Tailor your resume for this role to save a version.
+                </p>
+              </div>
+            ) : (
+              <ul className="version-list">
+                {job.tailoredResumeVersions.map((version) => (
+                  <VersionRow
+                    key={version.id}
+                    version={version}
+                    jobId={job.id}
+                    isSelected={version.id === job.selectedTailoredResumeId}
+                    isExporting={exportingVersions.has(version.id)}
+                    isAttaching={attachingVersion === version.id}
+                    onExport={handleExportPdf}
+                    onAttach={handleAttachVersion}
+                  />
+                ))}
+              </ul>
+            )}
+          </Card>
         </div>
 
         <div className="detail-aside">
-          <div className="card">
-            <div className="card-header">
-              <span className="card-title">Details</span>
-            </div>
-            <div className="card-body">
-              <div className="meta-list">
-                <div className="meta-row">
-                  <span className="meta-label">Status</span>
-                  <StatusDropdown
-                    value={status}
-                    onChange={handleStatusChange}
-                    disabled={isPatchingStatus}
-                  />
-                </div>
-                <div className="meta-row">
-                  <span className="meta-label">Added</span>
-                  <span className="meta-value">
-                    {formatLongDate(job.createdAt)}
-                  </span>
-                </div>
-                {job.dateApplied ? (
-                  <div className="meta-row">
-                    <span className="meta-label">Applied</span>
-                    <span className="meta-value">
-                      {formatLongDate(job.dateApplied)}
-                    </span>
-                  </div>
-                ) : null}
-                {job.link ? (
-                  <div className="meta-row">
-                    <span className="meta-label">Posting</span>
-                    <a
-                      href={job.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="meta-link"
-                    >
-                      View ↗
-                    </a>
-                  </div>
-                ) : null}
+          <Card title="Details">
+            <div className="meta-list">
+              <div className="meta-row">
+                <span className="meta-label">Added</span>
+                <span className="meta-value">{formatLongDate(job.createdAt)}</span>
               </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <div className="card-header">
-              <span className="card-title">Attached resume</span>
-            </div>
-            <div className="card-body">
-              {selectedVersion ? (
-                <div className="attached-resume">
-                  <div className="attached-resume-name">
-                    {selectedVersion.name ?? `Version ${selectedVersion.versionNumber}`}
-                  </div>
-                  <div className="attached-resume-actions">
-                    <Link
-                      to={`/resume/preview/${selectedVersion.id}?jobId=${job.id}`}
-                      className="btn btn-secondary"
-                      style={{ fontSize: 12, padding: '4px 10px' }}
-                    >
-                      Preview
-                    </Link>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      style={{ fontSize: 12, padding: '4px 10px' }}
-                      onClick={() => handleExportPdf(selectedVersion.id)}
-                      disabled={exportingVersions.has(selectedVersion.id)}
-                    >
-                      {exportingVersions.has(selectedVersion.id) ? 'Exporting' : 'Export PDF'}
-                    </button>
-                  </div>
+              {job.dateApplied ? (
+                <div className="meta-row">
+                  <span className="meta-label">Applied</span>
+                  <span className="meta-value">{formatLongDate(job.dateApplied)}</span>
                 </div>
-              ) : (
-                <p className="prose-muted">No version attached to this application.</p>
-              )}
+              ) : null}
+              {job.link ? (
+                <div className="meta-row">
+                  <span className="meta-label">Posting</span>
+                  <a
+                    href={job.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="meta-link"
+                  >
+                    View ↗
+                  </a>
+                </div>
+              ) : null}
             </div>
-          </div>
+          </Card>
 
-          <div className="card">
-            <div className="card-header">
-              <span className="card-title">Notes</span>
-            </div>
-            <div className="card-body">
-              {job.notes && job.notes.trim().length > 0 ? (
-                <p className="prose">{job.notes}</p>
-              ) : (
-                <p className="prose-muted">No notes yet.</p>
-              )}
-            </div>
-          </div>
+          <Card title="Attached resume">
+            {selectedVersion ? (
+              <div className="attached-resume">
+                <div className="attached-resume-name">
+                  {selectedVersion.name ?? `Version ${selectedVersion.versionNumber}`}
+                </div>
+                <div className="attached-resume-actions">
+                  <ButtonLink
+                    to={`/resume/preview/${selectedVersion.id}?jobId=${job.id}`}
+                    variant="secondary"
+                    small
+                  >
+                    Preview
+                  </ButtonLink>
+                  <Button
+                    small
+                    onClick={() => handleExportPdf(selectedVersion.id)}
+                    disabled={exportingVersions.has(selectedVersion.id)}
+                  >
+                    {exportingVersions.has(selectedVersion.id) ? 'Exporting' : 'Export PDF'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="prose-muted">No version attached to this application.</p>
+            )}
+          </Card>
+
+          <Card title="Notes">
+            {job.notes && job.notes.trim().length > 0 ? (
+              <p className="prose">{job.notes}</p>
+            ) : (
+              <p className="prose-muted">No notes yet.</p>
+            )}
+          </Card>
         </div>
       </div>
     </div>
   )
 }
+
 
 interface VersionRowProps {
   version: TailoredResumeVersion
@@ -452,17 +407,12 @@ function VersionRow({
         </div>
       </div>
       <div className="version-actions">
-        <Link
-          to={`/resume/preview/${version.id}?jobId=${jobId}`}
-          className="btn btn-secondary"
-          style={{ fontSize: 12, padding: '4px 10px' }}
-        >
+        <ButtonLink to={`/resume/preview/${version.id}?jobId=${jobId}`} variant="secondary" small>
           Preview
-        </Link>
+        </ButtonLink>
         <button
           type="button"
-          className="btn btn-secondary"
-          style={{ fontSize: 12, padding: '4px 10px' }}
+          className="btn btn-secondary btn-sm"
           onClick={() => onExport(version.id)}
           disabled={isExporting}
         >
@@ -471,8 +421,7 @@ function VersionRow({
         {!isSelected && (
           <button
             type="button"
-            className="btn btn-secondary"
-            style={{ fontSize: 12, padding: '4px 10px' }}
+            className="btn btn-secondary btn-sm"
             onClick={() => onAttach(version.id)}
             disabled={isAttaching}
           >
