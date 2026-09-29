@@ -20,6 +20,7 @@ export function JobDetailPage() {
   const [isPatchingStatus, setIsPatchingStatus] = useState(false)
   const [exportingVersions, setExportingVersions] = useState<Set<string>>(new Set())
   const [attachingVersion, setAttachingVersion] = useState<string | null>(null)
+  const [exportError, setExportError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -95,6 +96,7 @@ export function JobDetailPage() {
   }
 
   async function handleExportPdf(versionId: string) {
+    setExportError(null)
     setExportingVersions((prev) => new Set(prev).add(versionId))
     try {
       const blob = await exportApi.exportTailoredPdf(versionId)
@@ -106,8 +108,8 @@ export function JobDetailPage() {
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
-    } catch {
-      // Silently fail; user can retry
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : 'PDF export failed')
     } finally {
       setExportingVersions((prev) => {
         const next = new Set(prev)
@@ -259,6 +261,12 @@ export function JobDetailPage() {
           </Link>
         </div>
       </div>
+
+      {exportError && (
+        <div className="form-alert" role="alert" style={{ marginBottom: 16 }}>
+          {exportError}
+        </div>
+      )}
 
       <div className="detail-grid">
         <div className="detail-main">

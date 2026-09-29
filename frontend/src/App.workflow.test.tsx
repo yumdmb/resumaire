@@ -118,13 +118,13 @@ describe('workflow verification UI states', () => {
     await waitFor(() => expect(pdfRequests).toEqual(['/api/export/tailored/tailored-1/pdf']))
   })
 
-  it('loads the resume preview and disables export until preview HTML is ready', async () => {
+  it('loads the resume preview and disables export until the preview PDF is ready', async () => {
     window.localStorage.setItem(AUTH_TOKEN_KEY, 'token')
     stubDownloadUrl()
 
     let resolvePreview!: () => void
     const previewResponse = new Promise<Response>((resolve) => {
-      resolvePreview = () => resolve(htmlResponse('<main><h1>Ada Lovelace</h1></main>'))
+      resolvePreview = () => resolve(pdfResponse())
     })
     const pdfRequests: string[] = []
 
@@ -379,6 +379,8 @@ function createSuggestionBatch(): TailoringSuggestionBatch {
         id: 'suggestion-1',
         reviewState: 'Pending',
         targetSection: 'Summary',
+        targetPath: 'Summary',
+        operation: 'Replace',
         originalContent: 'Builds reliable React and API workflows.',
         suggestedContent: 'Builds accessible React workflows for hiring teams.',
         rationale: 'The job emphasizes React.',
@@ -447,13 +449,6 @@ function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { 'Content-Type': 'application/json' },
-  })
-}
-
-function htmlResponse(html: string): Response {
-  return new Response(html, {
-    status: 200,
-    headers: { 'Content-Type': 'text/html' },
   })
 }
 

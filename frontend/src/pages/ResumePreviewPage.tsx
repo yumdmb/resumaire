@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { exportApi } from '../lib/api'
 
@@ -11,16 +11,17 @@ export function ResumePreviewPage() {
 
   const previewType: PreviewType = tailoredResumeId ? 'tailored' : 'base'
 
-  const [html, setHtml] = useState<string | null>(null)
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
 
   useEffect(() => {
     let cancelled = false
+    let objectUrl: string | null = null
     setLoading(true)
     setError(null)
+    setPdfUrl(null)
 
     const fetchPreview = async () => {
       try {
@@ -30,7 +31,8 @@ export function ResumePreviewPage() {
             : await exportApi.previewBase()
 
         if (!cancelled) {
-          setHtml(result)
+          objectUrl = URL.createObjectURL(result)
+          setPdfUrl(objectUrl)
           setLoading(false)
         }
       } catch (err) {
@@ -42,7 +44,10 @@ export function ResumePreviewPage() {
     }
 
     fetchPreview()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
   }, [previewType, tailoredResumeId])
 
   const handleExportPdf = async () => {
@@ -111,14 +116,12 @@ export function ResumePreviewPage() {
         <div className="form-alert">{error}</div>
       )}
 
-      {html && !loading && (
+      {pdfUrl && !loading && (
         <div className="preview-frame-wrapper">
           <iframe
-            ref={iframeRef}
             className="preview-frame"
-            srcDoc={html}
+            src={pdfUrl}
             title="Resume preview"
-            sandbox="allow-same-origin"
           />
         </div>
       )}

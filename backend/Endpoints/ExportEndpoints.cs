@@ -20,11 +20,11 @@ public static class ExportEndpoints
 
         group.MapGet("/base/preview", PreviewBaseResumeAsync)
             .WithName("PreviewBaseResume")
-            .Produces<string>(contentType: "text/html");
+            .Produces<byte[]>(contentType: "application/pdf");
 
         group.MapGet("/tailored/{tailoredResumeId:guid}/preview", PreviewTailoredResumeAsync)
             .WithName("PreviewTailoredResume")
-            .Produces<string>(contentType: "text/html");
+            .Produces<byte[]>(contentType: "application/pdf");
 
         group.MapGet("/base/pdf", ExportBaseResumePdfAsync)
             .WithName("ExportBaseResumePdf")
@@ -37,10 +37,42 @@ public static class ExportEndpoints
         return group;
     }
 
-    private static async Task<IResult> PreviewBaseResumeAsync(
+    private static Task<IResult> PreviewBaseResumeAsync(
         ApplicationDbContext dbContext,
         HttpContext httpContext,
-        IResumeHtmlRenderer htmlRenderer,
+        ITypstPdfRenderer renderer,
+        CancellationToken cancellationToken) =>
+        RenderBaseAsync(dbContext, httpContext, renderer, "resume", inline: true, cancellationToken);
+
+    private static Task<IResult> PreviewTailoredResumeAsync(
+        Guid tailoredResumeId,
+        ApplicationDbContext dbContext,
+        HttpContext httpContext,
+        ITypstPdfRenderer renderer,
+        CancellationToken cancellationToken) =>
+        RenderTailoredAsync(tailoredResumeId, dbContext, httpContext, renderer, "resume-tailored", inline: true, cancellationToken);
+
+    private static Task<IResult> ExportBaseResumePdfAsync(
+        ApplicationDbContext dbContext,
+        HttpContext httpContext,
+        ITypstPdfRenderer renderer,
+        CancellationToken cancellationToken) =>
+        RenderBaseAsync(dbContext, httpContext, renderer, "resume", inline: false, cancellationToken);
+
+    private static Task<IResult> ExportTailoredResumePdfAsync(
+        Guid tailoredResumeId,
+        ApplicationDbContext dbContext,
+        HttpContext httpContext,
+        ITypstPdfRenderer renderer,
+        CancellationToken cancellationToken) =>
+        RenderTailoredAsync(tailoredResumeId, dbContext, httpContext, renderer, "resume-tailored", inline: false, cancellationToken);
+
+    private static async Task<IResult> RenderBaseAsync(
+        ApplicationDbContext dbContext,
+        HttpContext httpContext,
+        ITypstPdfRenderer renderer,
+        string fallbackName,
+        bool inline,
         CancellationToken cancellationToken)
     {
         var userId = httpContext.User.GetUserId();
@@ -48,20 +80,18 @@ public static class ExportEndpoints
             .AsNoTracking()
             .SingleOrDefaultAsync(r => r.UserId == userId, cancellationToken);
 
-        if (resume is null)
-            return Results.NotFound();
-
-        var content = DeserializeContent(resume.ContentJson);
-        var html = htmlRenderer.RenderToHtml(content);
-
-        return Results.Content(html, "text/html");
+        return resume is null
+            ? Results.NotFound()
+            : await RenderAsync(resume.ContentJson, renderer, fallbackName, inline, cancellationToken);
     }
 
-    private static async Task<IResult> PreviewTailoredResumeAsync(
+    private static async Task<IResult> RenderTailoredAsync(
         Guid tailoredResumeId,
         ApplicationDbContext dbContext,
         HttpContext httpContext,
-        IResumeHtmlRenderer htmlRenderer,
+        ITypstPdfRenderer renderer,
+        string fallbackName,
+        bool inline,
         CancellationToken cancellationToken)
     {
         var userId = httpContext.User.GetUserId();
@@ -69,60 +99,35 @@ public static class ExportEndpoints
             .AsNoTracking()
             .SingleOrDefaultAsync(r => r.Id == tailoredResumeId && r.UserId == userId, cancellationToken);
 
-        if (resume is null)
-            return Results.NotFound();
-
-        var content = DeserializeContent(resume.ContentJson);
-        var html = htmlRenderer.RenderToHtml(content);
-
-        return Results.Content(html, "text/html");
+        return resume is null
+            ? Results.NotFound()
+            : await RenderAsync(resume.ContentJson, renderer, fallbackName, inline, cancellationToken);
     }
 
-    private static async Task<IResult> ExportBaseResumePdfAsync(
-        ApplicationDbContext dbContext,
-        HttpContext httpContext,
-        IResumeHtmlRenderer htmlRenderer,
-        IResumePdfGenerator pdfGenerator,
+    private static async Task<IResult> RenderAsync(
+        string contentJson,
+        ITypstPdfRenderer renderer,
+        string fallbackName,
+        bool inline,
         CancellationToken cancellationToken)
     {
-        var userId = httpContext.User.GetUserId();
-        var resume = await dbContext.BaseResumes
-            .AsNoTracking()
-            .SingleOrDefaultAsync(r => r.UserId == userId, cancellationToken);
+        var content = DeserializeContent(contentJson);
 
-        if (resume is null)
-            return Results.NotFound();
+        byte[] pdfBytes;
+        try
+        {
+            pdfBytes = await renderer.RenderAsync(content, cancellationToken);
+        }
+        catch (ResumeRenderException ex)
+        {
+            return Results.Problem(
+                title: "Resume PDF rendering failed",
+                detail: ex.Message,
+                statusCode: StatusCodes.Status502BadGateway);
+        }
 
-        var content = DeserializeContent(resume.ContentJson);
-        var html = htmlRenderer.RenderToHtml(content);
-        var pdfBytes = await pdfGenerator.GenerateAsync(html, cancellationToken);
-
-        var fileName = SanitizeFileName(content.PersonalInfo?.FullName, "resume") + ".pdf";
-        return Results.File(pdfBytes, "application/pdf", fileName);
-    }
-
-    private static async Task<IResult> ExportTailoredResumePdfAsync(
-        Guid tailoredResumeId,
-        ApplicationDbContext dbContext,
-        HttpContext httpContext,
-        IResumeHtmlRenderer htmlRenderer,
-        IResumePdfGenerator pdfGenerator,
-        CancellationToken cancellationToken)
-    {
-        var userId = httpContext.User.GetUserId();
-        var resume = await dbContext.TailoredResumes
-            .AsNoTracking()
-            .SingleOrDefaultAsync(r => r.Id == tailoredResumeId && r.UserId == userId, cancellationToken);
-
-        if (resume is null)
-            return Results.NotFound();
-
-        var content = DeserializeContent(resume.ContentJson);
-        var html = htmlRenderer.RenderToHtml(content);
-        var pdfBytes = await pdfGenerator.GenerateAsync(html, cancellationToken);
-
-        var fileName = SanitizeFileName(content.PersonalInfo?.FullName, "resume-tailored") + ".pdf";
-        return Results.File(pdfBytes, "application/pdf", fileName);
+        var fileName = SanitizeFileName(content.PersonalInfo?.FullName, fallbackName) + ".pdf";
+        return Results.File(pdfBytes, "application/pdf", inline ? null : fileName);
     }
 
     private static ResumeContentDto DeserializeContent(string contentJson) =>

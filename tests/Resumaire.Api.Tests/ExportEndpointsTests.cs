@@ -21,28 +21,32 @@ public sealed class ExportEndpointsTests
     // ── Preview rendering ────────────────────────────────────────────────────
 
     [Fact]
-    public async Task PreviewBaseResume_ForOwner_ReturnsHtmlContainingPersonalInfo()
+    public async Task PreviewBaseResume_ForOwner_ReturnsInlinePdfRenderedFromSavedContent()
     {
         await using var factory = await CreateMigratedFactoryAsync();
         await ResetDatabaseAsync(factory);
         await SeedBaseResumeAsync(factory, OwnerUserId, fullName: "Ada Lovelace");
 
-        var client = factory.CreateClient();
+        string? capturedData = null;
+        using var appFactory = WithCapturingRenderer(factory, data => capturedData = data);
+
+        var client = appFactory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
 
         var response = await client.GetAsync("/api/export/base/preview");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("application/pdf", response.Content.Headers.ContentType?.MediaType);
+        Assert.NotEqual("attachment", response.Content.Headers.ContentDisposition?.DispositionType);
 
-        var html = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Ada Lovelace", html);
-        Assert.Contains("Builds reliable APIs.", html);
-        Assert.Contains("ASP.NET Core", html);
+        Assert.NotNull(capturedData);
+        Assert.Contains("Ada Lovelace", capturedData);
+        Assert.Contains("Builds reliable APIs.", capturedData);
+        Assert.Contains("ASP.NET Core", capturedData);
     }
 
     [Fact]
-    public async Task PreviewTailoredResume_ForOwner_ReturnsHtmlContainingTailoredContent()
+    public async Task PreviewTailoredResume_ForOwner_ReturnsPdfRenderedFromTailoredContent()
     {
         await using var factory = await CreateMigratedFactoryAsync();
         await ResetDatabaseAsync(factory);
@@ -51,17 +55,20 @@ public sealed class ExportEndpointsTests
             OwnerUserId,
             summary: "Tailored summary for the role.");
 
-        var client = factory.CreateClient();
+        string? capturedData = null;
+        using var appFactory = WithCapturingRenderer(factory, data => capturedData = data);
+
+        var client = appFactory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
 
         var response = await client.GetAsync($"/api/export/tailored/{tailoredResumeId}/preview");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal("application/pdf", response.Content.Headers.ContentType?.MediaType);
 
-        var html = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Ada Lovelace", html);
-        Assert.Contains("Tailored summary for the role.", html);
+        Assert.NotNull(capturedData);
+        Assert.Contains("Ada Lovelace", capturedData);
+        Assert.Contains("Tailored summary for the role.", capturedData);
     }
 
     [Fact]
@@ -135,7 +142,7 @@ public sealed class ExportEndpointsTests
         await ResetDatabaseAsync(factory);
         await SeedBaseResumeAsync(factory, OwnerUserId);
         await SeedUsersAsync(factory, OtherUserId);
-        using var appFactory = WithFakePdfGenerator(factory);
+        using var appFactory = WithFakeRenderer(factory);
 
         var client = appFactory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OtherUserId);
@@ -152,7 +159,7 @@ public sealed class ExportEndpointsTests
         await ResetDatabaseAsync(factory);
         var (_, tailoredResumeId) = await SeedTailoredResumeAsync(factory, OwnerUserId);
         await SeedUsersAsync(factory, OtherUserId);
-        using var appFactory = WithFakePdfGenerator(factory);
+        using var appFactory = WithFakeRenderer(factory);
 
         var client = appFactory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OtherUserId);
@@ -170,7 +177,7 @@ public sealed class ExportEndpointsTests
         await using var factory = await CreateMigratedFactoryAsync();
         await ResetDatabaseAsync(factory);
         await SeedBaseResumeAsync(factory, OwnerUserId, fullName: "Ada Lovelace");
-        using var appFactory = WithFakePdfGenerator(factory);
+        using var appFactory = WithFakeRenderer(factory);
 
         var client = appFactory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
@@ -192,7 +199,7 @@ public sealed class ExportEndpointsTests
         await using var factory = await CreateMigratedFactoryAsync();
         await ResetDatabaseAsync(factory);
         var (_, tailoredResumeId) = await SeedTailoredResumeAsync(factory, OwnerUserId);
-        using var appFactory = WithFakePdfGenerator(factory);
+        using var appFactory = WithFakeRenderer(factory);
 
         var client = appFactory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
@@ -213,7 +220,7 @@ public sealed class ExportEndpointsTests
         await using var factory = await CreateMigratedFactoryAsync();
         await ResetDatabaseAsync(factory);
         await SeedUsersAsync(factory, OwnerUserId);
-        using var appFactory = WithFakePdfGenerator(factory);
+        using var appFactory = WithFakeRenderer(factory);
 
         var client = appFactory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
@@ -232,8 +239,8 @@ public sealed class ExportEndpointsTests
         await ResetDatabaseAsync(factory);
         await SeedBaseResumeAsync(factory, OwnerUserId, summary: "Saved summary content.");
 
-        string? capturedHtml = null;
-        using var appFactory = WithCapturingPdfGenerator(factory, html => capturedHtml = html);
+        string? capturedData = null;
+        using var appFactory = WithCapturingRenderer(factory, data => capturedData = data);
 
         var client = appFactory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
@@ -241,8 +248,8 @@ public sealed class ExportEndpointsTests
         var response = await client.GetAsync("/api/export/base/pdf");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.NotNull(capturedHtml);
-        Assert.Contains("Saved summary content.", capturedHtml);
+        Assert.NotNull(capturedData);
+        Assert.Contains("Saved summary content.", capturedData);
     }
 
     [Fact]
@@ -255,8 +262,8 @@ public sealed class ExportEndpointsTests
             OwnerUserId,
             summary: "Saved tailored summary.");
 
-        string? capturedHtml = null;
-        using var appFactory = WithCapturingPdfGenerator(factory, html => capturedHtml = html);
+        string? capturedData = null;
+        using var appFactory = WithCapturingRenderer(factory, data => capturedData = data);
 
         var client = appFactory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
@@ -264,8 +271,8 @@ public sealed class ExportEndpointsTests
         var response = await client.GetAsync($"/api/export/tailored/{tailoredResumeId}/pdf");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.NotNull(capturedHtml);
-        Assert.Contains("Saved tailored summary.", capturedHtml);
+        Assert.NotNull(capturedData);
+        Assert.Contains("Saved tailored summary.", capturedData);
     }
 
     [Fact]
@@ -282,8 +289,8 @@ public sealed class ExportEndpointsTests
             OwnerUserId,
             summary: "Approved summary only.");
 
-        string? capturedHtml = null;
-        using var appFactory = WithCapturingPdfGenerator(factory, html => capturedHtml = html);
+        string? capturedData = null;
+        using var appFactory = WithCapturingRenderer(factory, data => capturedData = data);
 
         var client = appFactory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
@@ -291,9 +298,62 @@ public sealed class ExportEndpointsTests
         var response = await client.GetAsync($"/api/export/tailored/{tailoredResumeId}/pdf");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.NotNull(capturedHtml);
-        Assert.Contains("Approved summary only.", capturedHtml);
-        Assert.DoesNotContain("Rejected suggestion text.", capturedHtml);
+        Assert.NotNull(capturedData);
+        Assert.Contains("Approved summary only.", capturedData);
+        Assert.DoesNotContain("Rejected suggestion text.", capturedData);
+    }
+
+    [Fact]
+    public async Task ExportBaseResumePdf_WithRealTypst_ReturnsRenderedPdf()
+    {
+        if (!TypstPdfRendererTests.IsTypstAvailable())
+        {
+            return; // Real compile only runs where the typst CLI is installed.
+        }
+
+        await using var factory = await CreateMigratedFactoryAsync();
+        await ResetDatabaseAsync(factory);
+        await SeedBaseResumeAsync(factory, OwnerUserId, fullName: "Ada Lovelace");
+
+        var client = factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
+
+        var pdf = await client.GetAsync("/api/export/base/pdf");
+        var preview = await client.GetAsync("/api/export/base/preview");
+
+        Assert.Equal(HttpStatusCode.OK, pdf.StatusCode);
+        Assert.Equal("attachment", pdf.Content.Headers.ContentDisposition?.DispositionType);
+        Assert.Equal("ada-lovelace.pdf", pdf.Content.Headers.ContentDisposition?.FileNameStar ?? pdf.Content.Headers.ContentDisposition?.FileName);
+        var bytes = await pdf.Content.ReadAsByteArrayAsync();
+        Assert.StartsWith("%PDF", System.Text.Encoding.ASCII.GetString(bytes, 0, 4));
+
+        Assert.Equal(HttpStatusCode.OK, preview.StatusCode);
+        Assert.NotEqual("attachment", preview.Content.Headers.ContentDisposition?.DispositionType);
+        Assert.Equal(bytes, await preview.Content.ReadAsByteArrayAsync());
+    }
+
+    [Fact]
+    public async Task ExportBaseResumePdf_WhenRendererFails_ReturnsBadGatewayWithReason()
+    {
+        await using var factory = await CreateMigratedFactoryAsync();
+        await ResetDatabaseAsync(factory);
+        await SeedBaseResumeAsync(factory, OwnerUserId);
+
+        using var appFactory = factory.WithWebHostBuilder(builder =>
+            builder.ConfigureTestServices(services =>
+            {
+                services.RemoveAll<ITypstPdfRenderer>();
+                services.AddSingleton<ITypstPdfRenderer>(new FailingRenderer());
+            }));
+
+        var client = appFactory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
+
+        var response = await client.GetAsync("/api/export/base/pdf");
+
+        Assert.Equal(HttpStatusCode.BadGateway, response.StatusCode);
+        using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal("PDF rendering timed out.", problem.RootElement.GetProperty("detail").GetString());
     }
 
     // ── Unauthenticated access ───────────────────────────────────────────────
@@ -326,22 +386,17 @@ public sealed class ExportEndpointsTests
         return factory;
     }
 
-    private static WebApplicationFactory<Program> WithFakePdfGenerator(ResumaireApiFactory factory) =>
-        factory.WithWebHostBuilder(builder =>
-            builder.ConfigureTestServices(services =>
-            {
-                services.RemoveAll<IResumePdfGenerator>();
-                services.AddSingleton<IResumePdfGenerator>(new FakePdfGenerator());
-            }));
+    private static WebApplicationFactory<Program> WithFakeRenderer(ResumaireApiFactory factory) =>
+        WithCapturingRenderer(factory, _ => { });
 
-    private static WebApplicationFactory<Program> WithCapturingPdfGenerator(
+    private static WebApplicationFactory<Program> WithCapturingRenderer(
         ResumaireApiFactory factory,
-        Action<string> onGenerate) =>
+        Action<string> onRender) =>
         factory.WithWebHostBuilder(builder =>
             builder.ConfigureTestServices(services =>
             {
-                services.RemoveAll<IResumePdfGenerator>();
-                services.AddSingleton<IResumePdfGenerator>(new CapturingPdfGenerator(onGenerate));
+                services.RemoveAll<ITypstPdfRenderer>();
+                services.AddSingleton<ITypstPdfRenderer>(new CapturingRenderer(onRender));
             }));
 
     private static async Task ResetDatabaseAsync(ResumaireApiFactory factory)
@@ -498,21 +553,19 @@ public sealed class ExportEndpointsTests
                     "https://example.test/portfolio")
             ]);
 
-    private sealed class FakePdfGenerator : IResumePdfGenerator
+    private sealed class FailingRenderer : ITypstPdfRenderer
     {
-        private static readonly byte[] FakePdfBytes = "%PDF-1.4 fake"u8.ToArray();
-
-        public Task<byte[]> GenerateAsync(string html, CancellationToken cancellationToken = default) =>
-            Task.FromResult(FakePdfBytes);
+        public Task<byte[]> RenderAsync(ResumeContentDto content, CancellationToken cancellationToken = default) =>
+            throw new ResumeRenderException("PDF rendering timed out.");
     }
 
-    private sealed class CapturingPdfGenerator(Action<string> onGenerate) : IResumePdfGenerator
+    private sealed class CapturingRenderer(Action<string> onRender) : ITypstPdfRenderer
     {
         private static readonly byte[] FakePdfBytes = "%PDF-1.4 fake"u8.ToArray();
 
-        public Task<byte[]> GenerateAsync(string html, CancellationToken cancellationToken = default)
+        public Task<byte[]> RenderAsync(ResumeContentDto content, CancellationToken cancellationToken = default)
         {
-            onGenerate(html);
+            onRender(TypstResumeDataMapper.ToDataJson(content));
             return Task.FromResult(FakePdfBytes);
         }
     }

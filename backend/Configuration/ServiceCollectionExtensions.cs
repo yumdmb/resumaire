@@ -20,6 +20,12 @@ public static class ServiceCollectionExtensions
             .ValidateOnStart();
 
         services
+            .AddOptions<TypstOptions>()
+            .Bind(configuration.GetSection(TypstOptions.SectionName))
+            .Validate(options => !string.IsNullOrWhiteSpace(options.Executable), "Typst:Executable must not be empty.")
+            .ValidateOnStart();
+
+        services
             .AddOptions<OpenAiOptions>()
             .Bind(configuration.GetSection(OpenAiOptions.SectionName))
             .Validate(
@@ -83,9 +89,8 @@ public static class ServiceCollectionExtensions
 
         services.AddProblemDetails();
         services.AddOpenApi();
-        services.AddSingleton<IResumeHtmlRenderer, ResumeHtmlRenderer>();
-        services.AddSingleton<PlaywrightPdfGenerator>();
-        services.AddSingleton<IResumePdfGenerator>(sp => sp.GetRequiredService<PlaywrightPdfGenerator>());
+        services.AddMemoryCache(options => options.SizeLimit = 50L * 1024 * 1024);
+        services.AddSingleton<ITypstPdfRenderer, TypstPdfRenderer>();
         services.AddScoped<IJobKeywordExtractor, JobKeywordExtractor>();
         services.AddScoped<IResumeKeywordComparer, ResumeKeywordComparer>();
         services.AddScoped<TailoringSuggestionGuardrails>();
@@ -98,6 +103,7 @@ public static class ServiceCollectionExtensions
 
             client.BaseAddress = CreateBaseUri(options.BaseUrl);
         });
+
 
         services.AddCors(options =>
         {
