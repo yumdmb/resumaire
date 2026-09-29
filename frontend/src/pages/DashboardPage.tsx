@@ -147,14 +147,11 @@ export function DashboardPage() {
       ) : (
         <div className="job-list" role="list">
           {jobs.map((job) => (
-            <Link
-              key={job.id}
-              to={`/jobs/${job.id}`}
-              className="job-row"
-              role="listitem"
-            >
+            <div key={job.id} className="job-row" role="listitem">
               <div>
-                <div className="job-row-title">{job.title}</div>
+                <Link to={`/jobs/${job.id}`} className="job-row-title job-row-link">
+                  {job.title}
+                </Link>
                 <div className="job-row-company">{job.company}</div>
               </div>
               <StatusDropdown
@@ -165,7 +162,7 @@ export function DashboardPage() {
               <span className="job-row-date">
                 {formatShortDate(job.dateApplied ?? job.updatedAt)}
               </span>
-            </Link>
+            </div>
           ))}
         </div>
       )}

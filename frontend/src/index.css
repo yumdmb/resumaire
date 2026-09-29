@@ -393,10 +393,30 @@ select {
   background: var(--surface-raised);
 }
 
+.job-row {
+  position: relative;
+}
+
 .job-row-title {
   font-size: 13.5px;
   font-weight: 500;
   color: var(--text-primary);
+}
+
+/* Stretched link: whole row navigates, but the status control stays a sibling, not a descendant, of the anchor. */
+.job-row-link {
+  display: block;
+}
+
+.job-row-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.job-row .status-dropdown {
+  position: relative;
+  z-index: 1;
 }
 
 .job-row-company {
