@@ -57,7 +57,20 @@ dotnet user-secrets set --project backend "OpenAI:Model" "gpt-4o-mini"
 dotnet user-secrets set --project backend "OpenAI:ApiKey" "<your-key>"
 ```
 
-`OpenAI:ApiKey` is only needed once AI features are used. `OpenAI:BaseUrl` may point to another OpenAI-compatible provider if that provider supports the `/responses` endpoint and the structured output request/response shape used by the backend.
+`OpenAI:ApiKey` is only needed once AI features are used. `OpenAI:BaseUrl` may point to another OpenAI-compatible provider if that provider supports the `/responses` endpoint and the structured output request/response shape used by the backend. See [docs/ai-provider-configuration.md](docs/ai-provider-configuration.md) for reasoning models, token limits and per-user rate limits.
+
+### 3b. Install Typst (PDF export)
+
+Resume preview and PDF export are rendered with the [Typst](https://typst.app) CLI. The backend runs `typst compile` and needs the binary on `PATH` (or set `Typst:Executable` to its full path):
+
+```powershell
+winget install --id Typst.Typst
+typst --version
+```
+
+On Linux or in a container, download the release binary from <https://github.com/typst/typst/releases> and put it on `PATH`. The template uses the bundled New Computer Modern font, so no font install is needed. The backend logs a clear error when the binary cannot be started, and export requests then return `502`.
+
+Optional settings (defaults shown): `Typst:Executable=typst`, `Typst:TimeoutSeconds=20`, `Typst:MaxConcurrentRenders=2`, `Typst:CacheMinutes=10`.
 
 ### 4. Start PostgreSQL
 
