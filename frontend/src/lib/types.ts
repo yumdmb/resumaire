@@ -50,6 +50,28 @@ export interface ResumeLink {
   url: string | null
 }
 
+export interface ResumeProject {
+  id: string | null
+  name: string | null
+  url: string | null
+  technologies: string | null
+  bullets: string[]
+}
+
+export interface ResumeActivity {
+  id: string | null
+  title: string | null
+  location: string | null
+  role: string | null
+  date: string | null
+  bullets: string[]
+}
+
+export interface ResumeSkillGroup {
+  category: string | null
+  items: string[]
+}
+
 export interface ResumeContent {
   personalInfo: ResumePersonalInfo | null
   summary: string | null
@@ -58,6 +80,10 @@ export interface ResumeContent {
   education: ResumeEducation[]
   certifications: ResumeCertification[]
   links: ResumeLink[]
+  // Added in schema v2. Optional so v1 content still type-checks.
+  projects?: ResumeProject[]
+  activities?: ResumeActivity[]
+  skillGroups?: ResumeSkillGroup[]
 }
 
 export interface BaseResumeResponse {
@@ -85,6 +111,9 @@ export function emptyResumeContent(): ResumeContent {
     education: [],
     certifications: [],
     links: [],
+    projects: [],
+    activities: [],
+    skillGroups: [],
   }
 }
 
@@ -123,6 +152,27 @@ export function emptyCertification(): ResumeCertification {
     expirationDate: null,
     credentialId: null,
     url: null,
+  }
+}
+
+export function emptyProject(): ResumeProject {
+  return {
+    id: crypto.randomUUID(),
+    name: null,
+    url: null,
+    technologies: null,
+    bullets: [],
+  }
+}
+
+export function emptyActivity(): ResumeActivity {
+  return {
+    id: crypto.randomUUID(),
+    title: null,
+    location: null,
+    role: null,
+    date: null,
+    bullets: [],
   }
 }
 
@@ -244,6 +294,9 @@ export interface TailoringSuggestion {
   id: string
   reviewState: 'Pending' | 'Accepted' | 'Rejected'
   targetSection: string
+  /** Editable resume location, e.g. Experience[0].Bullets[1]. Empty for suggestions created before targets existed. */
+  targetPath: string
+  operation: 'Replace' | 'AddBullet' | 'SetSkills'
   originalContent: string | null
   suggestedContent: string
   rationale: string | null

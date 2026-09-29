@@ -6,6 +6,8 @@ export type ResumeSectionId =
   | 'skills'
   | 'experience'
   | 'education'
+  | 'projects'
+  | 'activities'
   | 'certifications'
   | 'links'
 
@@ -46,6 +48,22 @@ export const RESUME_SECTIONS: ResumeSectionDef[] = [
     label: 'Education',
     meta: (c) =>
       `${c.education.length} entr${c.education.length === 1 ? 'y' : 'ies'}`,
+  },
+  {
+    id: 'projects',
+    label: 'Projects',
+    meta: (c) => {
+      const n = c.projects?.length ?? 0
+      return `${n} project${n === 1 ? '' : 's'}`
+    },
+  },
+  {
+    id: 'activities',
+    label: 'Leadership & activities',
+    meta: (c) => {
+      const n = c.activities?.length ?? 0
+      return `${n} entr${n === 1 ? 'y' : 'ies'}`
+    },
   },
   {
     id: 'certifications',

@@ -4,7 +4,7 @@
 TBD - created by archiving change build-resumaire-mvp. Update Purpose after archive.
 ## Requirements
 ### Requirement: Structured base resume
-The system SHALL allow authenticated users to create and maintain one base resume stored as structured sections for personal info, summary, skills, work or project experience, education, certifications, and links.
+The system SHALL allow authenticated users to create and maintain one base resume stored as structured sections for personal info, summary, skills, work experience, education, projects, leadership and activities, certifications, and links. Resumes saved before projects and activities existed SHALL remain valid and load with those sections empty.
 
 #### Scenario: Create base resume
 - **WHEN** a signed-in user saves base resume sections

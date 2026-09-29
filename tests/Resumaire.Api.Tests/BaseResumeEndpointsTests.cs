@@ -1,3 +1,4 @@
+using Resumaire.Api.Contracts;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -27,7 +28,7 @@ public sealed class BaseResumeEndpointsTests
         var savedPayload = await ReadJsonAsync(saveResponse);
         var savedResume = savedPayload.GetProperty("data");
 
-        Assert.Equal(1, savedResume.GetProperty("schemaVersion").GetInt32());
+        Assert.Equal(ResumeContentSchema.CurrentVersion, savedResume.GetProperty("schemaVersion").GetInt32());
         Assert.Equal(1, savedResume.GetProperty("revision").GetInt32());
         Assert.Equal(
             "Ada Lovelace",
