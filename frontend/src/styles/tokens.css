@@ -1,0 +1,129 @@
+/*
+ * Design tokens — "warm editorial paper".
+ * Light is the default; the resolved theme is always written to
+ * <html data-theme="light|dark"> (see lib/theme.tsx and the inline script in index.html).
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Surfaces: warm paper, stepped by tone rather than shadow */
+  --bg: oklch(96.5% 0.012 85);
+  --surface: oklch(98.6% 0.007 85);
+  --surface-raised: oklch(99.3% 0.004 85);
+  --surface-sunken: oklch(93.8% 0.014 82);
+
+  /* Hairlines */
+  --border: oklch(88% 0.015 80);
+  --border-strong: oklch(76% 0.022 75);
+
+  /* Ink */
+  --text-primary: oklch(22% 0.02 55);
+  --text-secondary: oklch(42% 0.02 60);
+  --text-tertiary: oklch(50% 0.02 65);
+
+  /* Accent: vermilion. --accent fills, --accent-text is for text on surfaces */
+  --accent: oklch(55% 0.17 40);
+  --accent-hover: oklch(49% 0.17 40);
+  --accent-subtle: oklch(94% 0.035 50);
+  --accent-text: oklch(46% 0.16 40);
+  --on-accent: oklch(99% 0.004 80);
+
+  /* Status hues (used for text/markers; tints are mixed from them) */
+  --status-saved: oklch(46% 0.02 70);
+  --status-applied: oklch(48% 0.1 80);
+  --status-interview: oklch(46% 0.09 205);
+  --status-offer: oklch(45% 0.12 150);
+  --status-rejected: oklch(46% 0.1 8);
+
+  /* Feedback */
+  --success: oklch(42% 0.12 150);
+  --danger: oklch(45% 0.15 27);
+  --warning: oklch(44% 0.1 70);
+
+  /* Tints derived from the hues above, so both themes stay in step */
+  --tint-strength: 11%;
+  --tint-border-strength: 30%;
+
+  /* Typography */
+  --font: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Fraunces', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+  --font-mono: 'Geist Mono', 'Cascadia Code', Consolas, ui-monospace, monospace;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 56px;
+
+  /* Radius: tight */
+  --radius-sm: 4px;
+  --radius-md: 5px;
+  --radius-lg: 6px;
+
+  /* Layout */
+  --rail-width: 76px;
+  --bottom-nav-height: 58px;
+
+  /* Motion */
+  --dur-fast: 120ms;
+  --dur: 180ms;
+  --ease: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Focus */
+  --focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --bg: oklch(19% 0.012 60);
+  --surface: oklch(22.5% 0.013 60);
+  --surface-raised: oklch(25.5% 0.014 60);
+  --surface-sunken: oklch(16.5% 0.01 60);
+
+  --border: oklch(32% 0.015 60);
+  --border-strong: oklch(44% 0.018 60);
+
+  --text-primary: oklch(93% 0.01 80);
+  --text-secondary: oklch(76% 0.015 75);
+  --text-tertiary: oklch(66% 0.016 70);
+
+  --accent: oklch(68% 0.16 42);
+  --accent-hover: oklch(74% 0.15 42);
+  --accent-subtle: oklch(30% 0.05 45);
+  --accent-text: oklch(77% 0.13 45);
+  --on-accent: oklch(17% 0.02 50);
+
+  --status-saved: oklch(76% 0.02 70);
+  --status-applied: oklch(80% 0.11 85);
+  --status-interview: oklch(78% 0.09 200);
+  --status-offer: oklch(79% 0.13 150);
+  --status-rejected: oklch(76% 0.11 12);
+
+  --success: oklch(78% 0.13 150);
+  --danger: oklch(76% 0.13 25);
+  --warning: oklch(80% 0.11 80);
+
+  --tint-strength: 16%;
+  --tint-border-strength: 38%;
+}
+
+/* Derived tints (same element as the theme tokens, so they follow the theme) */
+:root {
+  --success-bg: color-mix(in oklch, var(--success) var(--tint-strength), var(--surface));
+  --success-border: color-mix(in oklch, var(--success) var(--tint-border-strength), var(--surface));
+  --danger-bg: color-mix(in oklch, var(--danger) var(--tint-strength), var(--surface));
+  --danger-border: color-mix(in oklch, var(--danger) var(--tint-border-strength), var(--surface));
+  --warning-bg: color-mix(in oklch, var(--warning) var(--tint-strength), var(--surface));
+  --warning-border: color-mix(in oklch, var(--warning) var(--tint-border-strength), var(--surface));
+  --info-bg: color-mix(in oklch, var(--status-interview) var(--tint-strength), var(--surface));
+  --info-border: color-mix(in oklch, var(--status-interview) var(--tint-border-strength), var(--surface));
+  --paper: oklch(99% 0.004 85);
+  --accent-border: color-mix(in oklch, var(--accent) var(--tint-border-strength), var(--surface));
+}

@@ -1,0 +1,266 @@
+/* ─── Filter tabs ────────────────────────────────────────────── */
+
+.filter-tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-5);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0;
+}
+
+.filter-tab {
+  padding: var(--space-2) var(--space-3);
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+
+.filter-tab:hover {
+  color: var(--text-primary);
+}
+
+.filter-tab.active {
+  color: var(--accent-text);
+  border-bottom-color: var(--accent);
+  font-weight: 500;
+}
+
+/* ─── Job list ───────────────────────────────────────────────── */
+
+.job-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.job-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 100ms ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.job-row:last-child {
+  border-bottom: none;
+}
+
+.job-row:hover {
+  background: var(--surface-raised);
+}
+
+.job-row {
+  position: relative;
+}
+
+.job-row-title {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* Stretched link: whole row navigates, but the status control stays a sibling, not a descendant, of the anchor. */
+.job-row-link {
+  display: block;
+}
+
+.job-row-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.job-row .status-dropdown {
+  position: relative;
+  z-index: 1;
+}
+
+.job-row-company {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin-top: 1px;
+}
+
+.job-row-date {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* ─── Detail layout ──────────────────────────────────────────── */
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.detail-aside {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* ─── Detail extras ──────────────────────────────────────────── */
+
+.meta-link {
+  font-size: 13px;
+  color: var(--accent-text);
+  font-weight: 500;
+}
+
+.meta-link:hover {
+  text-decoration: underline;
+}
+
+.empty-inline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) 0;
+  text-align: center;
+}
+
+/* ─── Tailored versions list ─────────────────────────────────── */
+
+.version-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.version-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.version-row:last-child {
+  border-bottom: none;
+}
+
+.version-name {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.version-meta {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+
+/* ─── Status dropdown ────────────────────────────────────────── */
+
+.status-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+
+.status-dropdown-trigger {
+  cursor: pointer;
+  background: none;
+  font: inherit;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.status-dropdown-trigger:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.status-dropdown-trigger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status-dropdown-menu {
+  z-index: 9999;
+  min-width: 140px;
+  padding: var(--space-1);
+  list-style: none;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.status-dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 6px var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 100ms ease;
+}
+
+.status-dropdown-item:hover {
+  background: var(--surface-sunken);
+}
+
+.status-dropdown-item--active {
+  background: var(--surface-sunken);
+}
+
+/* ─── Version row actions ────────────────────────────────────── */
+
+.version-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.version-selected-indicator {
+  display: inline-flex;
+  align-items: center;
+  margin-left: var(--space-2);
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 500;
+  background: var(--success-bg);
+  color: var(--status-offer);
+  border: 1px solid var(--success-border);
+}
+
+/* ─── Attached resume sidebar ────────────────────────────────── */
+
+.attached-resume {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.attached-resume-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.attached-resume-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}

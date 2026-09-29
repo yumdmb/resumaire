@@ -4,12 +4,12 @@ Each numbered group is one phase and one commit. Every group must leave `npm run
 
 ## 1. Foundation: tokens, theme, shared components
 
-- [ ] 1.1 Add fonts (Google Fonts links with preconnect, `display=swap`) and split `index.css` into `styles/tokens.css`, `base.css`, `components.css` and per-area files imported from `main.tsx`; verify the app renders identically apart from fonts and `npm run build` passes
-- [ ] 1.2 Define warm light and dark token sets (surfaces, ink, rules, vermilion accent + accent-text, five status hues, type scale, space, radius 4-6px, motion durations) with `color-scheme`; verify by rendering a temporary token sheet in both themes
-- [ ] 1.3 Add the pre-paint theme script in `index.html` and `ThemeProvider`/`useTheme` (`system|light|dark`, storage in try/catch) plus `ThemeToggle`; verify with Vitest tests for default-follows-system, override-persists, and storage-throws
-- [ ] 1.4 Build shared components in `components/ui/` (Button, StatusMark, Field, Card, EmptyState, Skeleton, PageHeader) with role/label-friendly markup; verify with a small render test per component and that StatusMark always includes a text label
-- [ ] 1.5 Build `ToastProvider`/`useToast` (polite live region, auto-dismiss with pause on hover/focus, manual dismiss, optional action); verify with tests for announce, auto-dismiss (fake timers), dismiss, and action callback
-- [ ] 1.6 Add global `:focus-visible` ring and `prefers-reduced-motion` rules in `base.css`; verify by keyboard-tabbing the current pages and emulating reduced motion in the browser
+- [x] 1.1 Add fonts (Google Fonts links with preconnect, `display=swap`) and split `index.css` into `styles/tokens.css`, `base.css`, `components.css` and per-area files imported from `main.tsx`; verify the app renders identically apart from fonts and `npm run build` passes
+- [x] 1.2 Define warm light and dark token sets (surfaces, ink, rules, vermilion accent + accent-text, five status hues, type scale, space, radius 4-6px, motion durations) with `color-scheme`; verify by rendering a temporary token sheet in both themes
+- [x] 1.3 Add the pre-paint theme script in `index.html` and `ThemeProvider`/`useTheme` (`system|light|dark`, storage in try/catch) plus `ThemeToggle`; verify with Vitest tests for default-follows-system, override-persists, and storage-throws
+- [x] 1.4 Build shared components in `components/ui/` (Button, StatusMark, Field, Card, EmptyState, Skeleton, PageHeader) with role/label-friendly markup; verify with a small render test per component and that StatusMark always includes a text label
+- [x] 1.5 Build `ToastProvider`/`useToast` (polite live region, auto-dismiss with pause on hover/focus, manual dismiss, optional action); verify with tests for announce, auto-dismiss (fake timers), dismiss, and action callback
+- [x] 1.6 Add global `:focus-visible` ring and `prefers-reduced-motion` rules in `base.css`; verify by keyboard-tabbing the current pages and emulating reduced motion in the browser
 
 ## 2. Shell, Jobs board, Job detail and form
 

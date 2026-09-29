@@ -2,11 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { JOB_STATUSES, type JobStatus } from '../lib/types'
 
 const BADGE_CLASS: Record<JobStatus, string> = {
-  Saved: 'badge badge-saved',
-  Applied: 'badge badge-applied',
-  Interview: 'badge badge-interview',
-  Offer: 'badge badge-offer',
-  Rejected: 'badge badge-rejected',
+  Saved: 'status-mark status-mark--saved status-mark--chip',
+  Applied: 'status-mark status-mark--applied status-mark--chip',
+  Interview: 'status-mark status-mark--interview status-mark--chip',
+  Offer: 'status-mark status-mark--offer status-mark--chip',
+  Rejected: 'status-mark status-mark--rejected status-mark--chip',
 }
 
 interface StatusDropdownProps {

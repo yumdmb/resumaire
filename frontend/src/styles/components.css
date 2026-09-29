@@ -1,0 +1,528 @@
+/* ─── Page header ────────────────────────────────────────────── */
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1.15;
+}
+
+.page-subtitle {
+  margin-top: var(--space-1);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+/* ─── Buttons ────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 7px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease),
+    color var(--dur-fast) var(--ease);
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: var(--surface-sunken);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+}
+
+.btn-danger {
+  background: transparent;
+  color: var(--danger);
+  border-color: var(--danger-border);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: var(--danger-bg);
+}
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 12.5px;
+}
+
+/* ─── Status mark ────────────────────────────────────────────── */
+/* A glyph + text label. The glyph shape differs per status so it never relies on colour alone. */
+
+.status-mark {
+  --mark: var(--status-saved);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--mark);
+  white-space: nowrap;
+}
+
+.status-mark svg {
+  flex-shrink: 0;
+}
+
+.status-mark--saved { --mark: var(--status-saved); }
+.status-mark--applied { --mark: var(--status-applied); }
+.status-mark--interview { --mark: var(--status-interview); }
+.status-mark--offer { --mark: var(--status-offer); }
+.status-mark--rejected { --mark: var(--status-rejected); }
+
+/* Legacy alias: tinted chip form of the same marks */
+.status-mark--chip {
+  padding: 2px 9px 2px 7px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklch, var(--mark) var(--tint-border-strength), var(--surface));
+  background: color-mix(in oklch, var(--mark) var(--tint-strength), var(--surface));
+}
+
+/* ─── Empty state ────────────────────────────────────────────── */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-10) var(--space-8);
+  text-align: center;
+  color: var(--text-tertiary);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: transparent;
+}
+
+.empty-state-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.empty-state-body {
+  font-size: 13px;
+  max-width: 36ch;
+  line-height: 1.6;
+}
+
+/* ─── Cards / panels ─────────────────────────────────────────── */
+
+.card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border);
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.card-body {
+  padding: var(--space-4) var(--space-5);
+}
+
+/* ─── Meta list ──────────────────────────────────────────────── */
+
+.meta-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.meta-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+.meta-value {
+  font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* ─── Icon button ────────────────────────────────────────────── */
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 100ms ease, color 100ms ease;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.btn-icon:hover {
+  background: var(--surface-sunken);
+  color: var(--text-primary);
+}
+
+/* ─── Text button ────────────────────────────────────────────── */
+
+.btn-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  color: var(--accent-text);
+  cursor: pointer;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: var(--space-1) 0;
+  transition: opacity 100ms ease;
+}
+
+.btn-text:hover {
+  opacity: 0.8;
+}
+
+/* ─── Code / mono ────────────────────────────────────────────── */
+
+code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1px 6px;
+}
+
+/* ─── Page actions ───────────────────────────────────────────── */
+
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  transition: color 120ms ease;
+}
+
+.back-link:hover {
+  color: var(--text-primary);
+}
+
+/* ─── Prose / read-only text ─────────────────────────────────── */
+
+.prose {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  white-space: pre-wrap;
+  max-width: 70ch;
+}
+
+.prose-muted {
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+/* ─── Form card ──────────────────────────────────────────────── */
+
+.form-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: var(--space-6);
+  max-width: 720px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.form-row-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.form-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  letter-spacing: -0.005em;
+}
+
+.form-required {
+  color: var(--status-rejected);
+  font-weight: 400;
+}
+
+.form-input {
+  width: 100%;
+  font-size: 13.5px;
+  color: var(--text-primary);
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.form-input:hover {
+  border-color: var(--border-strong);
+}
+
+.form-input:focus {
+  outline: none;
+  background: var(--surface);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.6;
+  font-family: var(--font);
+}
+
+.form-error {
+  font-size: 12px;
+  color: var(--status-rejected);
+  line-height: 1.45;
+}
+
+.form-alert {
+  border: 1px solid var(--danger-border);
+  background: var(--danger-bg);
+  color: var(--danger);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  font-size: 13px;
+  max-width: 720px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ─── Skeletons ──────────────────────────────────────────────── */
+
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.85; }
+}
+
+.skeleton {
+  background: var(--surface-sunken);
+  border-radius: var(--radius-sm);
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 12px;
+  border-radius: 4px;
+}
+
+.skeleton-heading {
+  height: 22px;
+  border-radius: 6px;
+}
+
+.skeleton-pill {
+  height: 18px;
+  width: 72px;
+  border-radius: 999px;
+}
+
+.skeleton-card {
+  height: 140px;
+  border-radius: var(--radius-lg);
+}
+
+/* ─── Unsaved changes notice ─────────────────────────────────── */
+
+.preview-unsaved-notice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--warning);
+  background: var(--warning-bg);
+  border: 1px solid var(--warning-border);
+}
+
+
+.form-required {
+  color: var(--accent-text);
+}
+
+/* ─── Toasts ─────────────────────────────────────────────────── */
+
+.toast-region {
+  position: fixed;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  max-width: min(380px, calc(100vw - 2 * var(--space-4)));
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  background: var(--text-primary);
+  color: var(--bg);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--accent);
+  font-size: 13px;
+  animation: toast-in var(--dur) var(--ease);
+}
+
+.toast--error {
+  border-left-color: var(--danger);
+}
+
+.toast-message {
+  flex: 1;
+}
+
+.toast-action {
+  border: none;
+  background: none;
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.toast-close {
+  display: inline-flex;
+  border: none;
+  background: none;
+  color: inherit;
+  opacity: 0.7;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.toast-close:hover {
+  opacity: 1;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+.form-hint {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
