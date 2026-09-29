@@ -27,10 +27,12 @@ public static partial class ResumeContentEditor
     public static readonly IReadOnlyList<string> Sections =
         ["PersonalInfo", "Summary", "Skills", "Experience", "Education", "Projects", "Activities", "Certifications", "Links"];
 
+    /// <summary>Skill categories are part of the Skills section, so their paths report "Skills".</summary>
     public static string SectionOf(string path)
     {
         var end = path.IndexOfAny(['[', '.']);
-        return end < 0 ? path : path[..end];
+        var section = end < 0 ? path : path[..end];
+        return section == "SkillGroups" ? "Skills" : section;
     }
 
     /// <summary>Reads the text at any known resume path, for evidence and original-content lookups.</summary>
@@ -52,6 +54,18 @@ public static partial class ResumeContentEditor
         if (skillMatch.Success)
         {
             return TryAt(content.Skills, Index(skillMatch, "i"), out text);
+        }
+
+        var groupMatch = SkillGroupPathRegex().Match(path);
+        if (groupMatch.Success && TryAt(content.SkillGroups, Index(groupMatch, "i"), out var group))
+        {
+            if (!groupMatch.Groups["j"].Success)
+            {
+                text = JoinGroup(group);
+                return !string.IsNullOrWhiteSpace(text);
+            }
+
+            return TryAt(group.Items, Index(groupMatch, "j"), out text);
         }
 
         var match = EntryPathRegex().Match(path);
@@ -130,14 +144,25 @@ public static partial class ResumeContentEditor
         switch (operation)
         {
             case TailoringOperations.SetSkills:
-                if (path != "Skills")
+                // With categories the flat list is only a mirror, so edits must go through a category.
+                var hasGroups = content.SkillGroups is { Count: > 0 };
+                if (path == "Skills" && !hasGroups)
                 {
-                    error = "SetSkills must target 'Skills'.";
-                    return false;
+                    original = string.Join(", ", content.Skills ?? []);
+                    return true;
                 }
 
-                original = string.Join(", ", content.Skills ?? []);
-                return true;
+                var setGroup = SkillGroupOnlyRegex().Match(path);
+                if (setGroup.Success && TryAt(content.SkillGroups, Index(setGroup, "i"), out var target))
+                {
+                    original = string.Join(", ", target.Items ?? []);
+                    return true;
+                }
+
+                error = hasGroups
+                    ? "SetSkills must target one skill category, such as 'SkillGroups[0]'."
+                    : "SetSkills must target 'Skills'.";
+                return false;
 
             case TailoringOperations.AddBullet:
                 var listMatch = ListPathRegex().Match(path);
@@ -184,13 +209,31 @@ public static partial class ResumeContentEditor
         switch (operation)
         {
             case TailoringOperations.SetSkills:
-                // Reordering and trimming only: a skill that is not already on the resume is dropped.
-                var existing = (content.Skills ?? []).ToHashSet(StringComparer.OrdinalIgnoreCase);
-                var skills = value
-                    .Split(['\n', ',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                    .Where(existing.Contains)
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToArray();
+                // Reordering and trimming only: a skill that is not already in the target list is dropped.
+                var groupTarget = SkillGroupOnlyRegex().Match(path);
+                if (groupTarget.Success)
+                {
+                    var groupIndex = Index(groupTarget, "i");
+                    if (!TryAt(content.SkillGroups, groupIndex, out var group))
+                    {
+                        return content;
+                    }
+
+                    var groupItems = ReorderSubset(group.Items, value);
+                    if (groupItems.Length == 0)
+                    {
+                        return content;
+                    }
+
+                    var groups = Replace(content.SkillGroups!, groupIndex, g => g with { Items = groupItems });
+                    var mirrored = groups
+                        .SelectMany(g => g.Items ?? [])
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToArray();
+                    return content with { SkillGroups = groups, Skills = mirrored };
+                }
+
+                var skills = ReorderSubset(content.Skills, value);
                 return skills.Length == 0 ? content : content with { Skills = skills };
 
             case TailoringOperations.Replace when path == "Summary":
@@ -267,6 +310,18 @@ public static partial class ResumeContentEditor
         }
     }
 
+    private static string[] ReorderSubset(IReadOnlyList<string>? existingItems, string text)
+    {
+        var existing = (existingItems ?? []).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return text
+            .Split(['\n', ',', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(existing.Contains)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    private static string JoinGroup(ResumeSkillGroupDto group) => string.Join(", ", group.Items ?? []);
+
     private static IReadOnlyList<string> Replace(IReadOnlyList<string> list, int index, string value)
     {
         if (index < 0 || index >= list.Count)
@@ -309,6 +364,12 @@ public static partial class ResumeContentEditor
 
     [GeneratedRegex(@"^Skills\[(?<i>\d+)\]$")]
     private static partial Regex SkillPathRegex();
+
+    [GeneratedRegex(@"^SkillGroups\[(?<i>\d+)\](?:\.Items\[(?<j>\d+)\])?$")]
+    private static partial Regex SkillGroupPathRegex();
+
+    [GeneratedRegex(@"^SkillGroups\[(?<i>\d+)\]$")]
+    private static partial Regex SkillGroupOnlyRegex();
 
     [GeneratedRegex(@"^(?<sec>Experience|Education|Projects|Activities|Certifications|Links)\[(?<i>\d+)\](?:\.(?<f>[A-Za-z]+)(?:\[(?<j>\d+)\])?)?$")]
     private static partial Regex EntryPathRegex();

@@ -67,7 +67,21 @@ public sealed class ResumeKeywordComparer : IResumeKeywordComparer
         AddIfPresent(sources, "PersonalInfo", "PersonalInfo.Headline", resumeContent.PersonalInfo?.Headline, isProminent: true);
         AddIfPresent(sources, "Summary", "Summary", resumeContent.Summary, isProminent: true);
 
-        if (resumeContent.Skills is not null)
+        if (resumeContent.SkillGroups is { Count: > 0 })
+        {
+            // Categories are what the resume shows, so they are the editable skill locations.
+            for (var index = 0; index < resumeContent.SkillGroups.Count; index++)
+            {
+                var group = resumeContent.SkillGroups[index];
+                AddIfPresent(sources, "Skills", $"SkillGroups[{index}]", string.Join(", ", group.Items ?? []), isProminent: true);
+
+                for (var itemIndex = 0; itemIndex < (group.Items?.Count ?? 0); itemIndex++)
+                {
+                    AddIfPresent(sources, "Skills", $"SkillGroups[{index}].Items[{itemIndex}]", group.Items![itemIndex], isProminent: true);
+                }
+            }
+        }
+        else if (resumeContent.Skills is not null)
         {
             for (var index = 0; index < resumeContent.Skills.Count; index++)
             {

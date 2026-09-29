@@ -46,6 +46,42 @@ public sealed class ResumeContentEditorTests
     }
 
     [Fact]
+    public void Apply_SetSkills_OnACategory_ReordersOnlyThatCategoryAndMirrorsTheFlatList()
+    {
+        var content = Resume() with
+        {
+            SkillGroups =
+            [
+                new ResumeSkillGroupDto("Frontend", ["React", "CSS"]),
+                new ResumeSkillGroupDto("Backend", ["Go", "SQL"])
+            ]
+        };
+
+        var updated = ResumeContentEditor.Apply(
+            content,
+            "SkillGroups[0]",
+            TailoringOperations.SetSkills,
+            "CSS, SQL, React");
+
+        Assert.Equal(["CSS", "React"], updated.SkillGroups![0].Items);
+        Assert.Equal(["Go", "SQL"], updated.SkillGroups[1].Items);
+        Assert.Equal("Frontend", updated.SkillGroups[0].Category);
+        Assert.Equal(["CSS", "React", "Go", "SQL"], updated.Skills);
+    }
+
+    [Fact]
+    public void TryValidateTarget_SetSkills_RequiresACategoryOnceCategoriesExist()
+    {
+        var content = Resume() with { SkillGroups = [new ResumeSkillGroupDto("Frontend", ["React"])] };
+
+        Assert.False(ResumeContentEditor.TryValidateTarget(content, "Skills", TailoringOperations.SetSkills, out _, out _));
+        Assert.False(ResumeContentEditor.TryValidateTarget(content, "SkillGroups[3]", TailoringOperations.SetSkills, out _, out _));
+        Assert.True(ResumeContentEditor.TryValidateTarget(content, "SkillGroups[0]", TailoringOperations.SetSkills, out var original, out _));
+        Assert.Equal("React", original);
+        Assert.Equal("Skills", ResumeContentEditor.SectionOf("SkillGroups[0]"));
+    }
+
+    [Fact]
     public void Apply_ReplaceSummaryAndHeadline()
     {
         var content = Resume();

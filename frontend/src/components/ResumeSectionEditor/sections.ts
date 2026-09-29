@@ -35,7 +35,11 @@ export const RESUME_SECTIONS: ResumeSectionDef[] = [
   {
     id: 'skills',
     label: 'Skills',
-    meta: (c) => `${c.skills.length} skill${c.skills.length === 1 ? '' : 's'}`,
+    meta: (c) => {
+      const groups = c.skillGroups?.length ?? 0
+      const skills = `${c.skills.length} skill${c.skills.length === 1 ? '' : 's'}`
+      return groups > 0 ? `${skills} in ${groups} categor${groups === 1 ? 'y' : 'ies'}` : skills
+    },
   },
   {
     id: 'experience',

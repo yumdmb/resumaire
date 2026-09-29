@@ -115,6 +115,25 @@ describe('applyAcceptedSuggestions', () => {
     expect(result.skills).toEqual(['TypeScript', 'React'])
   })
 
+  it('reorders one skill category and mirrors the flat list', () => {
+    const base = {
+      ...content(),
+      skillGroups: [
+        { category: 'Frontend', items: ['React', 'CSS'] },
+        { category: 'Backend', items: ['Go', 'SQL'] },
+      ],
+    }
+
+    const result = applyAcceptedSuggestions(base, [
+      state('SkillGroups[0]', 'SetSkills', 'CSS, SQL, React'),
+    ])
+
+    expect(result.skillGroups?.[0].items).toEqual(['CSS', 'React'])
+    expect(result.skillGroups?.[1].items).toEqual(['Go', 'SQL'])
+    expect(result.skills).toEqual(['CSS', 'React', 'Go', 'SQL'])
+    expect(applyAcceptedSuggestions(base, [state('Skills', 'SetSkills', 'React')])).toEqual(base)
+  })
+
   it('adds a bullet to the targeted list for experience, education, projects and activities', () => {
     const result = applyAcceptedSuggestions(content(), [
       state('Experience[0].Bullets', 'AddBullet', 'Added experience.'),

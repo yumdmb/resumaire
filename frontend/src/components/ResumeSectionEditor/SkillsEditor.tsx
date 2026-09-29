@@ -1,59 +1,74 @@
 import { useState } from 'react'
+import type { ResumeSkillGroup } from '../../lib/types'
 
 interface Props {
-  value: string[]
-  onChange: (v: string[]) => void
+  skills: string[]
+  skillGroups: ResumeSkillGroup[]
+  /** Both values change together: the flat list mirrors the groups so keyword matching keeps working. */
+  onChange: (skills: string[], skillGroups: ResumeSkillGroup[]) => void
 }
 
-export function SkillsEditor({ value, onChange }: Props) {
+function splitSkills(text: string, existing: string[]): string[] {
+  const seen = new Set(existing.map((s) => s.toLowerCase()))
+  return text
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => {
+      const key = s.toLowerCase()
+      if (!s || seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+}
+
+function flatten(groups: ResumeSkillGroup[]): string[] {
+  return splitSkills(groups.flatMap((g) => g.items).join(','), [])
+}
+
+interface TagListProps {
+  items: string[]
+  onChange: (items: string[]) => void
+  label: string
+}
+
+function TagList({ items, onChange, label }: TagListProps) {
   const [draft, setDraft] = useState('')
 
-  function addSkill() {
-    const trimmed = draft.trim()
-    if (!trimmed) return
-    const newSkills = trimmed
-      .split(',')
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0 && !value.includes(s))
-    if (newSkills.length > 0) onChange([...value, ...newSkills])
+  function add() {
+    const added = splitSkills(draft, items)
+    if (added.length > 0) onChange([...items, ...added])
     setDraft('')
   }
 
-  function removeSkill(index: number) {
-    onChange(value.filter((_, i) => i !== index))
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent) {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      addSkill()
-    }
-  }
-
   return (
-    <div className="editor-fields">
+    <>
       <div className="skills-input-row">
         <input
           className="form-input"
           placeholder="Add skills (comma-separated)"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          onKeyDown={handleKeyDown}
-          aria-label="New skill"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              add()
+            }
+          }}
+          aria-label={label}
         />
-        <button type="button" className="btn btn-secondary" onClick={addSkill}>
+        <button type="button" className="btn btn-secondary" onClick={add}>
           Add
         </button>
       </div>
-      {value.length > 0 && (
+      {items.length > 0 && (
         <div className="skills-list">
-          {value.map((skill, i) => (
+          {items.map((skill, i) => (
             <span key={`${skill}-${i}`} className="skill-tag">
               {skill}
               <button
                 type="button"
                 className="skill-tag-remove"
-                onClick={() => removeSkill(i)}
+                onClick={() => onChange(items.filter((_, j) => j !== i))}
                 aria-label={`Remove ${skill}`}
               >
                 ×
@@ -62,6 +77,81 @@ export function SkillsEditor({ value, onChange }: Props) {
           ))}
         </div>
       )}
+    </>
+  )
+}
+
+/**
+ * Skills are either one flat list, or named categories such as "Frontend" and "Backend" that
+ * export as "Frontend: React, Next.js". Once categories exist they are the source of truth.
+ */
+export function SkillsEditor({ skills, skillGroups, onChange }: Props) {
+  if (skillGroups.length === 0) {
+    return (
+      <div className="editor-fields">
+        <TagList
+          items={skills}
+          onChange={(next) => onChange(next, [])}
+          label="New skill"
+        />
+        <div>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() =>
+              onChange(skills, [{ category: skills.length > 0 ? 'Skills' : '', items: skills }])
+            }
+          >
+            Group skills into categories
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  function update(next: ResumeSkillGroup[]) {
+    onChange(flatten(next), next)
+  }
+
+  return (
+    <div className="editor-fields">
+      {skillGroups.map((group, i) => (
+        <div key={i} className="skill-group">
+          <div className="skills-input-row">
+            <input
+              className="form-input"
+              placeholder="Category, e.g. Frontend"
+              value={group.category ?? ''}
+              onChange={(e) =>
+                update(skillGroups.map((g, j) => (j === i ? { ...g, category: e.target.value } : g)))
+              }
+              aria-label={`Category ${i + 1} name`}
+            />
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => update(skillGroups.filter((_, j) => j !== i))}
+              aria-label={`Remove category ${group.category || i + 1}`}
+            >
+              Remove
+            </button>
+          </div>
+          <TagList
+            items={group.items}
+            onChange={(items) => update(skillGroups.map((g, j) => (j === i ? { ...g, items } : g)))}
+            label={`New skill for ${group.category || `category ${i + 1}`}`}
+          />
+        </div>
+      ))}
+      <div>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => update([...skillGroups, { category: '', items: [] }])}
+        >
+          Add category
+        </button>
+      </div>
     </div>
   )
 }

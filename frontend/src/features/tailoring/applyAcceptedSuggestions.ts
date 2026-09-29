@@ -35,6 +35,27 @@ const listSections: Record<string, { key: ListSection; field: 'bullets' | 'detai
   Activities: { key: 'activities', field: 'bullets' },
 }
 
+function dedupe(values: string[]): string[] {
+  const seen = new Set<string>()
+  return values.filter((value) => {
+    const key = value.toLowerCase()
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
+/** Reorder or trim only: skills that are not already in `existing` are dropped. */
+function reorderSubset(existing: string[], text: string): string[] {
+  const allowed = new Set(existing.map((skill) => skill.toLowerCase()))
+  return dedupe(
+    text
+      .split(/[\n,;]+/)
+      .map((value) => value.trim())
+      .filter((value) => value && allowed.has(value.toLowerCase())),
+  )
+}
+
 export function applySuggestion(
   content: ResumeContent,
   targetPath: string,
@@ -43,20 +64,24 @@ export function applySuggestion(
 ): ResumeContent {
   if (!text) return content
 
-  if (operation === 'SetSkills' && targetPath === 'Skills') {
-    // Reorder or trim only: skills that are not already on the resume are dropped.
-    const existing = new Set(content.skills.map((skill) => skill.toLowerCase()))
-    const seen = new Set<string>()
-    const skills = text
-      .split(/[\n,;]+/)
-      .map((value) => value.trim())
-      .filter((value) => {
-        const key = value.toLowerCase()
-        if (!value || !existing.has(key) || seen.has(key)) return false
-        seen.add(key)
-        return true
-      })
-    return skills.length === 0 ? content : { ...content, skills }
+  if (operation === 'SetSkills') {
+    const groups = content.skillGroups ?? []
+    if (targetPath === 'Skills' && groups.length === 0) {
+      const skills = reorderSubset(content.skills, text)
+      return skills.length === 0 ? content : { ...content, skills }
+    }
+
+    const groupMatch = /^SkillGroups\[(\d+)\]$/.exec(targetPath)
+    const index = groupMatch ? Number(groupMatch[1]) : -1
+    if (!groups[index]) return content
+
+    const items = reorderSubset(groups[index].items, text)
+    if (items.length === 0) return content
+
+    const skillGroups = groups.map((group, i) => (i === index ? { ...group, items } : group))
+    // The flat list mirrors the categories, as the server does when it applies the same change.
+    const skills = dedupe(skillGroups.flatMap((group) => group.items))
+    return { ...content, skillGroups, skills }
   }
 
   if (operation === 'Replace' && targetPath === 'Summary') {

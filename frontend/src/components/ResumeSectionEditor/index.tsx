@@ -55,8 +55,12 @@ export function ResumeSectionEditor({
     case 'skills':
       return (
         <SkillsEditor
-          value={content.skills}
-          onChange={(v) => updateSection('skills', v)}
+          skills={content.skills}
+          skillGroups={content.skillGroups ?? []}
+          onChange={(skills, groups) => {
+            updateSection('skills', skills)
+            updateSection('skillGroups', groups)
+          }}
         />
       )
     case 'experience':

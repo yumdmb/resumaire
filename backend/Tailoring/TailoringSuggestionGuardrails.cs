@@ -149,7 +149,8 @@ public sealed partial class TailoringSuggestionGuardrails
 
         if (suggestion.Operation == TailoringOperations.SetSkills)
         {
-            ValidateSkillsSubset(suggestion.SuggestedContent, resumeContent, errors);
+            // originalContent is the current list at the target: the flat skills, or one category's items.
+            ValidateSkillsSubset(suggestion.SuggestedContent, originalContent, errors);
         }
         else
         {
@@ -201,11 +202,11 @@ public sealed partial class TailoringSuggestionGuardrails
 
     private static void ValidateSkillsSubset(
         string suggestedContent,
-        ResumeContentDto resumeContent,
+        string? currentSkills,
         List<string> errors)
     {
-        var existing = (resumeContent.Skills ?? [])
-            .Select(skill => skill.Trim())
+        var existing = (currentSkills ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var suggested = suggestedContent
