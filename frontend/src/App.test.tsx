@@ -4,6 +4,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { AuthProvider } from './lib/auth'
+import { ThemeProvider } from './lib/theme'
+import { ToastProvider } from './components/ui/Toast'
 
 const AUTH_TOKEN_KEY = 'resumaire:accessToken'
 
@@ -147,11 +149,11 @@ describe('App auth flows', () => {
 
 function renderApp(initialEntry: string) {
   return render(
-    <MemoryRouter initialEntries={[initialEntry]}>
+    <ThemeProvider><ToastProvider><MemoryRouter initialEntries={[initialEntry]}>
       <AuthProvider>
         <App />
       </AuthProvider>
-    </MemoryRouter>,
+    </MemoryRouter></ToastProvider></ThemeProvider>,
   )
 }
 

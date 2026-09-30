@@ -1,0 +1,15 @@
+/* ─── Responsive ─────────────────────────────────────────────── */
+
+
+/* ─── Form responsive ────────────────────────────────────────── */
+
+@media (max-width: 640px) {
+  .form-row-two {
+    grid-template-columns: 1fr;
+  }
+
+  .form-card {
+    padding: var(--space-5);
+  }
+}
+

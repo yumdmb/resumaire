@@ -44,6 +44,7 @@ app.UseCors(CorsOptions.SectionName);
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapResumaireEndpoints();
 

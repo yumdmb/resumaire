@@ -67,7 +67,21 @@ public sealed class ResumeKeywordComparer : IResumeKeywordComparer
         AddIfPresent(sources, "PersonalInfo", "PersonalInfo.Headline", resumeContent.PersonalInfo?.Headline, isProminent: true);
         AddIfPresent(sources, "Summary", "Summary", resumeContent.Summary, isProminent: true);
 
-        if (resumeContent.Skills is not null)
+        if (resumeContent.SkillGroups is { Count: > 0 })
+        {
+            // Categories are what the resume shows, so they are the editable skill locations.
+            for (var index = 0; index < resumeContent.SkillGroups.Count; index++)
+            {
+                var group = resumeContent.SkillGroups[index];
+                AddIfPresent(sources, "Skills", $"SkillGroups[{index}]", string.Join(", ", group.Items ?? []), isProminent: true);
+
+                for (var itemIndex = 0; itemIndex < (group.Items?.Count ?? 0); itemIndex++)
+                {
+                    AddIfPresent(sources, "Skills", $"SkillGroups[{index}].Items[{itemIndex}]", group.Items![itemIndex], isProminent: true);
+                }
+            }
+        }
+        else if (resumeContent.Skills is not null)
         {
             for (var index = 0; index < resumeContent.Skills.Count; index++)
             {
@@ -121,6 +135,46 @@ public sealed class ResumeKeywordComparer : IResumeKeywordComparer
                         "Education",
                         $"Education[{index}].Details[{detailIndex}]",
                         education.Details[detailIndex],
+                        isProminent: false);
+                }
+            }
+        }
+
+        if (resumeContent.Projects is not null)
+        {
+            for (var index = 0; index < resumeContent.Projects.Count; index++)
+            {
+                var project = resumeContent.Projects[index];
+                AddIfPresent(sources, "Projects", $"Projects[{index}].Name", project.Name, isProminent: false);
+                AddIfPresent(sources, "Projects", $"Projects[{index}].Technologies", project.Technologies, isProminent: false);
+
+                for (var bulletIndex = 0; bulletIndex < (project.Bullets?.Count ?? 0); bulletIndex++)
+                {
+                    AddIfPresent(
+                        sources,
+                        "Projects",
+                        $"Projects[{index}].Bullets[{bulletIndex}]",
+                        project.Bullets![bulletIndex],
+                        isProminent: false);
+                }
+            }
+        }
+
+        if (resumeContent.Activities is not null)
+        {
+            for (var index = 0; index < resumeContent.Activities.Count; index++)
+            {
+                var activity = resumeContent.Activities[index];
+                AddIfPresent(sources, "Activities", $"Activities[{index}].Title", activity.Title, isProminent: false);
+                AddIfPresent(sources, "Activities", $"Activities[{index}].Role", activity.Role, isProminent: false);
+
+                for (var bulletIndex = 0; bulletIndex < (activity.Bullets?.Count ?? 0); bulletIndex++)
+                {
+                    AddIfPresent(
+                        sources,
+                        "Activities",
+                        $"Activities[{index}].Bullets[{bulletIndex}]",
+                        activity.Bullets![bulletIndex],
                         isProminent: false);
                 }
             }

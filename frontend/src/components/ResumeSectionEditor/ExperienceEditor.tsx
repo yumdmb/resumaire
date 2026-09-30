@@ -1,6 +1,8 @@
+import { Button } from '../ui/Button'
 import type { ResumeExperience } from '../../lib/types'
 import { emptyExperience } from '../../lib/types'
 import { CloseIcon } from './CloseIcon'
+import { EditorEntryHeader } from './EditorEntryHeader'
 
 interface ListProps {
   value: ResumeExperience[]
@@ -25,13 +27,11 @@ export function ExperienceEditor({ value, onChange, idPrefix }: ListProps) {
           onRemove={() => onChange(value.filter((_, idx) => idx !== i))}
         />
       ))}
-      <button
-        type="button"
-        className="btn btn-secondary editor-add-btn"
+      <Button className="editor-add-btn"
         onClick={() => onChange([...value, emptyExperience()])}
       >
         + Add experience
-      </button>
+      </Button>
     </div>
   )
 }
@@ -44,13 +44,7 @@ interface EntryProps {
   onRemove: () => void
 }
 
-function ExperienceEntryEditor({
-  entry,
-  index,
-  idPrefix,
-  onChange,
-  onRemove,
-}: EntryProps) {
+function ExperienceEntryEditor({ entry, index, idPrefix, onChange, onRemove }: EntryProps) {
   const id = (suffix: string) => `${idPrefix}exp-${index}-${suffix}`
 
   function update(field: keyof ResumeExperience, val: unknown) {
@@ -65,20 +59,12 @@ function ExperienceEntryEditor({
 
   return (
     <div className="editor-entry">
-      <div className="editor-entry-header">
-        <span className="editor-entry-num">{index + 1}</span>
-        <span className="editor-entry-title">
-          {entry.role || entry.organization || 'New experience'}
-        </span>
-        <button
-          type="button"
-          className="btn-icon"
-          onClick={onRemove}
-          aria-label="Remove entry"
-        >
-          <CloseIcon />
-        </button>
-      </div>
+      <EditorEntryHeader
+        num={index + 1}
+        title={entry.role || entry.organization || 'New experience'}
+        onRemove={onRemove}
+        removeLabel="Remove entry"
+      />
 
       <div className="form-row-two">
         <div className="form-field">
@@ -127,7 +113,7 @@ function ExperienceEntryEditor({
             className="form-input"
             placeholder={entry.isCurrent ? 'Present' : 'e.g. Dec 2023'}
             disabled={entry.isCurrent}
-            value={entry.isCurrent ? '' : entry.endDate ?? ''}
+            value={entry.isCurrent ? '' : (entry.endDate ?? '')}
             onChange={(e) => update('endDate', e.target.value || null)}
           />
         </div>
@@ -182,15 +168,11 @@ function ExperienceEntryEditor({
               </button>
             </div>
           ))}
-          <button
-            type="button"
-            className="btn-text"
-            onClick={() =>
-              onChange({ ...entry, bullets: [...entry.bullets, ''] })
-            }
+          <Button variant="ghost" small
+            onClick={() => onChange({ ...entry, bullets: [...entry.bullets, ''] })}
           >
             + Add bullet
-          </button>
+          </Button>
         </div>
       </div>
     </div>

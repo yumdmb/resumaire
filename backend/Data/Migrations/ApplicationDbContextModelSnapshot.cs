@@ -394,6 +394,11 @@ namespace Resumaire.Api.Data.Migrations
                     b.Property<Guid>("JobId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<string>("OriginalContentJson")
                         .HasColumnType("jsonb");
 
@@ -411,6 +416,9 @@ namespace Resumaire.Api.Data.Migrations
                     b.Property<Guid?>("SourceBaseResumeId")
                         .HasColumnType("uuid");
 
+                    b.Property<int?>("SourceBaseResumeRevision")
+                        .HasColumnType("integer");
+
                     b.Property<string>("SourceEvidenceJson")
                         .HasColumnType("jsonb");
 
@@ -420,6 +428,11 @@ namespace Resumaire.Api.Data.Migrations
 
                     b.Property<Guid?>("TailoredResumeId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("TargetPath")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("TargetSection")
                         .IsRequired()

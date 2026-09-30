@@ -4,6 +4,8 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
 import { AuthProvider } from './lib/auth'
+import { ThemeProvider } from './lib/theme'
+import { ToastProvider } from './components/ui/Toast'
 import type {
   BaseResumeResponse,
   JobDetail,
@@ -56,7 +58,7 @@ describe('workflow verification UI states', () => {
     expect(await screen.findByText('Frontend Lead')).toBeInTheDocument()
     expect(screen.getByText('Backend Engineer')).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('tab', { name: /^interview$/i }))
+    await userEvent.click(screen.getByRole('button', { name: /^interview$/i }))
 
     await waitFor(() => {
       expect(screen.getByText('Frontend Lead')).toBeInTheDocument()
@@ -118,13 +120,13 @@ describe('workflow verification UI states', () => {
     await waitFor(() => expect(pdfRequests).toEqual(['/api/export/tailored/tailored-1/pdf']))
   })
 
-  it('loads the resume preview and disables export until preview HTML is ready', async () => {
+  it('loads the resume preview and disables export until the preview PDF is ready', async () => {
     window.localStorage.setItem(AUTH_TOKEN_KEY, 'token')
     stubDownloadUrl()
 
     let resolvePreview!: () => void
     const previewResponse = new Promise<Response>((resolve) => {
-      resolvePreview = () => resolve(htmlResponse('<main><h1>Ada Lovelace</h1></main>'))
+      resolvePreview = () => resolve(pdfResponse())
     })
     const pdfRequests: string[] = []
 
@@ -225,11 +227,11 @@ describe('workflow verification UI states', () => {
 
 function renderApp(initialEntry: string) {
   return render(
-    <MemoryRouter initialEntries={[initialEntry]}>
+    <ThemeProvider><ToastProvider><MemoryRouter initialEntries={[initialEntry]}>
       <AuthProvider>
         <App />
       </AuthProvider>
-    </MemoryRouter>,
+    </MemoryRouter></ToastProvider></ThemeProvider>,
   )
 }
 
@@ -379,6 +381,8 @@ function createSuggestionBatch(): TailoringSuggestionBatch {
         id: 'suggestion-1',
         reviewState: 'Pending',
         targetSection: 'Summary',
+        targetPath: 'Summary',
+        operation: 'Replace',
         originalContent: 'Builds reliable React and API workflows.',
         suggestedContent: 'Builds accessible React workflows for hiring teams.',
         rationale: 'The job emphasizes React.',
@@ -426,8 +430,10 @@ function createJobDetail(overrides: Partial<JobDetail> = {}): JobDetail {
 }
 
 function toSummary(job: JobDetail): JobSummary {
-  const { tailoredResumeVersions: _tailoredResumeVersions, description: _description, ...summary } = job
-  return summary
+  const summary: Record<string, unknown> = { ...job }
+  delete summary.tailoredResumeVersions
+  delete summary.description
+  return summary as unknown as JobSummary
 }
 
 function toVersionSummary(detail: TailoredResumeDetail) {
@@ -447,13 +453,6 @@ function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { 'Content-Type': 'application/json' },
-  })
-}
-
-function htmlResponse(html: string): Response {
-  return new Response(html, {
-    status: 200,
-    headers: { 'Content-Type': 'text/html' },
   })
 }
 

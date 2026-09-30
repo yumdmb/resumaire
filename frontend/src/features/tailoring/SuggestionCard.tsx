@@ -1,10 +1,23 @@
 import { useState } from 'react'
+import { Button } from '../../components/ui/Button'
 import type { SuggestionDecision, SuggestionState } from './types'
 
 interface Props {
   state: SuggestionState
   onDecision: (decision: SuggestionDecision) => void
   onEditContent: (content: string) => void
+}
+
+const DECISION_LABEL: Record<SuggestionDecision, string> = {
+  pending: 'Pending',
+  accepted: 'Accepted',
+  rejected: 'Rejected',
+}
+
+const DECISION_GLYPH: Record<SuggestionDecision, string> = {
+  pending: '○',
+  accepted: '✓',
+  rejected: '✕',
 }
 
 export function SuggestionCard({ state, onDecision, onEditContent }: Props) {
@@ -20,8 +33,8 @@ export function SuggestionCard({ state, onDecision, onEditContent }: Props) {
     .join(' ')
 
   function handleEdit() {
+    // Editing does not decide anything: the user still accepts the edited text explicitly.
     setIsEditing(true)
-    onDecision('accepted')
   }
 
   function handleAccept() {
@@ -43,34 +56,28 @@ export function SuggestionCard({ state, onDecision, onEditContent }: Props) {
     <div className={cardClass}>
       <div className="suggestion-card-header">
         <span className="suggestion-section-tag">{suggestion.targetSection}</span>
+        {suggestion.targetPath && suggestion.targetPath !== suggestion.targetSection && (
+          <code className="suggestion-target-path">{suggestion.targetPath}</code>
+        )}
+        <span className={`suggestion-state suggestion-state--${decision}`}>
+          <span aria-hidden="true">{DECISION_GLYPH[decision]}</span> {DECISION_LABEL[decision]}
+        </span>
 
         <div className="suggestion-decision-controls">
           {decision !== 'accepted' && (
-            <button
-              type="button"
-              className="suggestion-btn suggestion-btn--accept"
-              onClick={handleAccept}
-            >
+            <Button small variant="primary" onClick={handleAccept}>
               Accept
-            </button>
+            </Button>
           )}
           {decision !== 'rejected' && (
-            <button
-              type="button"
-              className="suggestion-btn suggestion-btn--reject"
-              onClick={handleReject}
-            >
+            <Button small onClick={handleReject}>
               Reject
-            </button>
+            </Button>
           )}
           {!isEditing && decision !== 'rejected' && (
-            <button
-              type="button"
-              className="suggestion-btn suggestion-btn--edit"
-              onClick={handleEdit}
-            >
+            <Button small variant="ghost" onClick={handleEdit}>
               Edit
-            </button>
+            </Button>
           )}
           {decision !== 'pending' && (
             <button
@@ -94,35 +101,28 @@ export function SuggestionCard({ state, onDecision, onEditContent }: Props) {
       </div>
 
       <div className="suggestion-card-body">
-        {suggestion.originalContent && (
-          <div className="suggestion-diff-row">
-            <span className="suggestion-diff-label">Original</span>
-            <p className="suggestion-original">{suggestion.originalContent}</p>
-          </div>
-        )}
-
-        <div className="suggestion-diff-row">
-          <span className="suggestion-diff-label">Suggested</span>
-          {isEditing ? (
-            <textarea
-              className="form-input form-textarea suggestion-edit-area"
-              value={editedContent}
-              onChange={(e) => onEditContent(e.target.value)}
-              rows={3}
-              autoFocus
-            />
-          ) : (
-            <p
-              className={[
-                'suggestion-suggested',
-                decision === 'accepted' && 'suggestion-suggested--accepted',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-            >
-              {editedContent}
-            </p>
+        <div className={`suggestion-diff${suggestion.originalContent ? '' : ' suggestion-diff--single'}`}>
+          {suggestion.originalContent && (
+            <div className="suggestion-block suggestion-block--before">
+              <span className="suggestion-diff-label">Before</span>
+              <p className="suggestion-original">{suggestion.originalContent}</p>
+            </div>
           )}
+          <div className="suggestion-block suggestion-block--after">
+            <span className="suggestion-diff-label">After</span>
+            {isEditing ? (
+              <textarea
+                className="form-input form-textarea suggestion-edit-area"
+                aria-label="Edit suggested text"
+                value={editedContent}
+                onChange={(e) => onEditContent(e.target.value)}
+                rows={3}
+                autoFocus
+              />
+            ) : (
+              <p className="suggestion-suggested">{editedContent}</p>
+            )}
+          </div>
         </div>
 
         {suggestion.rationale && (

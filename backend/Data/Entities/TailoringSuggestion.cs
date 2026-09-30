@@ -24,6 +24,15 @@ public sealed class TailoringSuggestion
 
     public string TargetSection { get; set; } = string.Empty;
 
+    /// <summary>Editable resume location this suggestion changes, for example Experience[0].Bullets[1].</summary>
+    public string TargetPath { get; set; } = string.Empty;
+
+    /// <summary>Replace, AddBullet or SetSkills. See <c>TailoringOperations</c>.</summary>
+    public string Operation { get; set; } = "Replace";
+
+    /// <summary>Base resume revision the suggestion was generated from. Null for rows created before revisions were tracked.</summary>
+    public int? SourceBaseResumeRevision { get; set; }
+
     public string? OriginalContentJson { get; set; }
 
     public string SuggestedContentJson { get; set; } = "{}";

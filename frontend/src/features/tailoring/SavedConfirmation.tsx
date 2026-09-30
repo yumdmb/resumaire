@@ -1,3 +1,4 @@
+import { Button } from '../../components/ui/Button'
 import { formatLongDate } from '../../lib/format'
 import type { TailoredResumeDetail } from '../../lib/types'
 
@@ -29,12 +30,10 @@ export function SavedConfirmation({ version, onTailorAnother, onViewJob }: Props
         </p>
       </div>
       <div className="tailor-saved-actions">
-        <button type="button" className="btn btn-secondary" onClick={onTailorAnother}>
-          Tailor another
-        </button>
-        <button type="button" className="btn btn-primary" onClick={onViewJob}>
+        <Button onClick={onTailorAnother}>Tailor another</Button>
+        <Button variant="primary" onClick={onViewJob}>
           View job
-        </button>
+        </Button>
       </div>
     </div>
   )

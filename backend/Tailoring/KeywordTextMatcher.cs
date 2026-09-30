@@ -11,7 +11,8 @@ internal static class KeywordTextMatcher
             return 0;
         }
 
-        var pattern = $@"(?<![a-z0-9+#.]){Regex.Escape(normalizedTerm)}(?![a-z0-9+#.])";
+        // A term ends at whitespace or punctuation, but not inside a token such as "node.js" or "go-to-market".
+        var pattern = $@"(?<![a-z0-9+#]|[a-z0-9][.\-]){Regex.Escape(normalizedTerm)}(?![a-z0-9+#]|[.\-][a-z0-9])";
         return Regex.Matches(normalizedText, pattern, RegexOptions.IgnoreCase).Count;
     }
 

@@ -2,7 +2,7 @@ namespace Resumaire.Api.Contracts;
 
 public static class ResumeContentSchema
 {
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
 }
 
 public sealed record ResumeContentDto(
@@ -12,7 +12,29 @@ public sealed record ResumeContentDto(
     IReadOnlyList<ResumeExperienceDto>? Experience,
     IReadOnlyList<ResumeEducationDto>? Education,
     IReadOnlyList<ResumeCertificationDto>? Certifications,
-    IReadOnlyList<ResumeLinkDto>? Links);
+    IReadOnlyList<ResumeLinkDto>? Links,
+    IReadOnlyList<ResumeProjectDto>? Projects = null,
+    IReadOnlyList<ResumeActivityDto>? Activities = null,
+    IReadOnlyList<ResumeSkillGroupDto>? SkillGroups = null);
+
+public sealed record ResumeProjectDto(
+    string? Id,
+    string? Name,
+    string? Url,
+    string? Technologies,
+    IReadOnlyList<string>? Bullets);
+
+public sealed record ResumeActivityDto(
+    string? Id,
+    string? Title,
+    string? Location,
+    string? Role,
+    string? Date,
+    IReadOnlyList<string>? Bullets);
+
+public sealed record ResumeSkillGroupDto(
+    string? Category,
+    IReadOnlyList<string>? Items);
 
 public sealed record ResumePersonalInfoDto(
     string? FullName,

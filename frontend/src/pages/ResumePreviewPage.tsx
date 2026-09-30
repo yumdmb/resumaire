@@ -1,5 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { Page } from '../components/ui/Page'
+import { useEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import { Button } from '../components/ui/Button'
+import { PageHeader } from '../components/ui/PageHeader'
 import { exportApi } from '../lib/api'
 
 type PreviewType = 'base' | 'tailored'
@@ -11,42 +14,54 @@ export function ResumePreviewPage() {
 
   const previewType: PreviewType = tailoredResumeId ? 'tailored' : 'base'
 
-  const [html, setHtml] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  // The result is tagged with the request it belongs to, so a new request reads as loading
+  // without resetting state inside the effect.
+  const requestKey = `${previewType}:${tailoredResumeId ?? ''}`
+  const [result, setResult] = useState<{ key: string; url: string | null; error: string | null } | null>(null)
+  const [exportError, setExportError] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
-  const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  const current = result?.key === requestKey ? result : null
+  const loading = current === null
+  const pdfUrl = current?.url ?? null
+  const error = exportError ?? current?.error ?? null
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
-    setError(null)
+    let objectUrl: string | null = null
 
     const fetchPreview = async () => {
       try {
-        const result =
+        const blob =
           previewType === 'tailored' && tailoredResumeId
             ? await exportApi.previewTailored(tailoredResumeId)
             : await exportApi.previewBase()
 
         if (!cancelled) {
-          setHtml(result)
-          setLoading(false)
+          objectUrl = URL.createObjectURL(blob)
+          setResult({ key: requestKey, url: objectUrl, error: null })
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load preview')
-          setLoading(false)
+          setResult({
+            key: requestKey,
+            url: null,
+            error: err instanceof Error ? err.message : 'Failed to load preview',
+          })
         }
       }
     }
 
     fetchPreview()
-    return () => { cancelled = true }
-  }, [previewType, tailoredResumeId])
+    return () => {
+      cancelled = true
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [previewType, tailoredResumeId, requestKey])
 
   const handleExportPdf = async () => {
     setExporting(true)
+    setExportError(null)
     try {
       const blob =
         previewType === 'tailored' && tailoredResumeId
@@ -62,7 +77,7 @@ export function ResumePreviewPage() {
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Export failed')
+      setExportError(err instanceof Error ? err.message : 'Export failed')
     } finally {
       setExporting(false)
     }
@@ -73,55 +88,44 @@ export function ResumePreviewPage() {
     : '/resume'
 
   return (
-    <div className="page preview-page">
-      <div className="page-header">
-        <div>
+    <Page width="standard">
+      <PageHeader
+        eyebrow={
           <Link to={backPath} className="back-link">
             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             Back
           </Link>
-          <h1 className="page-title">
-            {previewType === 'tailored' ? 'Tailored Resume Preview' : 'Resume Preview'}
-          </h1>
-        </div>
-        <div className="page-actions">
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={handleExportPdf}
-            disabled={exporting || loading || !!error}
-          >
+        }
+        title={previewType === 'tailored' ? 'Tailored Resume Preview' : 'Resume Preview'}
+        actions={
+          <Button variant="primary" onClick={handleExportPdf} disabled={exporting || loading || !!error}>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path d="M3 10v2.5A1.5 1.5 0 0 0 4.5 14h7a1.5 1.5 0 0 0 1.5-1.5V10M8 2v8M5 7l3 3 3-3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             {exporting ? 'Exporting…' : 'Export PDF'}
-          </button>
-        </div>
-      </div>
+          </Button>
+        }
+      />
 
       {loading && (
-        <div className="preview-loading">
-          <div className="skeleton skeleton-card" style={{ height: 600 }} />
+        <div className="preview-desk preview-loading" aria-busy="true">
+          <div className="preview-sheet skeleton" />
         </div>
       )}
 
       {error && (
-        <div className="form-alert">{error}</div>
+        <div className="form-alert" role="alert">{error}</div>
       )}
 
-      {html && !loading && (
-        <div className="preview-frame-wrapper">
-          <iframe
-            ref={iframeRef}
-            className="preview-frame"
-            srcDoc={html}
-            title="Resume preview"
-            sandbox="allow-same-origin"
-          />
+      {pdfUrl && !loading && (
+        <div className="preview-desk">
+          <div className="preview-sheet">
+            <iframe className="preview-frame" src={pdfUrl} title="Resume preview" />
+          </div>
         </div>
       )}
-    </div>
+    </Page>
   )
 }

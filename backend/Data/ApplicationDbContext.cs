@@ -180,6 +180,14 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
                 .IsRequired()
                 .HasMaxLength(100);
 
+            suggestion.Property(value => value.TargetPath)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            suggestion.Property(value => value.Operation)
+                .IsRequired()
+                .HasMaxLength(32);
+
             suggestion.Property(value => value.OriginalContentJson)
                 .HasColumnType("jsonb");
 

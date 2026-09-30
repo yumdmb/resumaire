@@ -6,6 +6,8 @@ export type ResumeSectionId =
   | 'skills'
   | 'experience'
   | 'education'
+  | 'projects'
+  | 'activities'
   | 'certifications'
   | 'links'
 
@@ -33,7 +35,11 @@ export const RESUME_SECTIONS: ResumeSectionDef[] = [
   {
     id: 'skills',
     label: 'Skills',
-    meta: (c) => `${c.skills.length} skill${c.skills.length === 1 ? '' : 's'}`,
+    meta: (c) => {
+      const groups = c.skillGroups?.length ?? 0
+      const skills = `${c.skills.length} skill${c.skills.length === 1 ? '' : 's'}`
+      return groups > 0 ? `${skills} in ${groups} categor${groups === 1 ? 'y' : 'ies'}` : skills
+    },
   },
   {
     id: 'experience',
@@ -46,6 +52,22 @@ export const RESUME_SECTIONS: ResumeSectionDef[] = [
     label: 'Education',
     meta: (c) =>
       `${c.education.length} entr${c.education.length === 1 ? 'y' : 'ies'}`,
+  },
+  {
+    id: 'projects',
+    label: 'Projects',
+    meta: (c) => {
+      const n = c.projects?.length ?? 0
+      return `${n} project${n === 1 ? '' : 's'}`
+    },
+  },
+  {
+    id: 'activities',
+    label: 'Leadership & activities',
+    meta: (c) => {
+      const n = c.activities?.length ?? 0
+      return `${n} entr${n === 1 ? 'y' : 'ies'}`
+    },
   },
   {
     id: 'certifications',

@@ -89,7 +89,8 @@ async function request<T>(
   }
 
   const contentType = response.headers.get('Content-Type') ?? ''
-  const isJson = contentType.includes('application/json')
+  // ASP.NET Core sends ProblemDetails as application/problem+json, so match any JSON media type.
+  const isJson = contentType.includes('json')
 
   if (!response.ok) {
     if (isJson) {
@@ -97,8 +98,8 @@ async function request<T>(
         | ProblemDetails
         | null
       const title =
-        problem?.title ??
         problem?.detail ??
+        problem?.title ??
         response.statusText ??
         'Request failed'
       const fieldErrors = normalizeFieldErrors(problem?.errors)
@@ -227,73 +228,62 @@ export const resumeApi = {
   },
 }
 
+async function fetchPdf(path: string, failureMessage: string): Promise<Blob> {
+  const token = getAccessToken()
+  const headers: HeadersInit = { Accept: 'application/pdf' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const response = await fetch(`${frontendEnv.apiBaseUrl}${path}`, { headers })
+  if (!response.ok) {
+    const contentType = response.headers.get('Content-Type') ?? ''
+    if (contentType.includes('json')) {
+      const problem = (await response.json().catch(() => null)) as ProblemDetails | null
+      throw new ApiError(
+        problem?.detail ?? problem?.title ?? failureMessage,
+        response.status,
+      )
+    }
+    throw new ApiError(response.statusText || failureMessage, response.status)
+  }
+  return response.blob()
+}
+
+// Preview and export are the same Typst-rendered PDF; preview is shown inline.
 export const exportApi = {
-  async previewBase(): Promise<string> {
-    const url = `${frontendEnv.apiBaseUrl}/api/export/base/preview`
-    const token = getAccessToken()
-    const headers: HeadersInit = { Accept: 'text/html' }
-    if (token) headers['Authorization'] = `Bearer ${token}`
-
-    const response = await fetch(url, { headers })
-    if (!response.ok) {
-      throw new ApiError(response.statusText || 'Preview failed', response.status)
-    }
-    return response.text()
+  previewBase(): Promise<Blob> {
+    return fetchPdf('/api/export/base/preview', 'Preview failed')
   },
 
-  async previewTailored(tailoredResumeId: string): Promise<string> {
-    const url = `${frontendEnv.apiBaseUrl}/api/export/tailored/${tailoredResumeId}/preview`
-    const token = getAccessToken()
-    const headers: HeadersInit = { Accept: 'text/html' }
-    if (token) headers['Authorization'] = `Bearer ${token}`
-
-    const response = await fetch(url, { headers })
-    if (!response.ok) {
-      throw new ApiError(response.statusText || 'Preview failed', response.status)
-    }
-    return response.text()
+  previewTailored(tailoredResumeId: string): Promise<Blob> {
+    return fetchPdf(`/api/export/tailored/${tailoredResumeId}/preview`, 'Preview failed')
   },
 
-  async exportBasePdf(): Promise<Blob> {
-    const url = `${frontendEnv.apiBaseUrl}/api/export/base/pdf`
-    const token = getAccessToken()
-    const headers: HeadersInit = { Accept: 'application/pdf' }
-    if (token) headers['Authorization'] = `Bearer ${token}`
-
-    const response = await fetch(url, { headers })
-    if (!response.ok) {
-      throw new ApiError(response.statusText || 'Export failed', response.status)
-    }
-    return response.blob()
+  exportBasePdf(): Promise<Blob> {
+    return fetchPdf('/api/export/base/pdf', 'Export failed')
   },
 
-  async exportTailoredPdf(tailoredResumeId: string): Promise<Blob> {
-    const url = `${frontendEnv.apiBaseUrl}/api/export/tailored/${tailoredResumeId}/pdf`
-    const token = getAccessToken()
-    const headers: HeadersInit = { Accept: 'application/pdf' }
-    if (token) headers['Authorization'] = `Bearer ${token}`
-
-    const response = await fetch(url, { headers })
-    if (!response.ok) {
-      throw new ApiError(response.statusText || 'Export failed', response.status)
-    }
-    return response.blob()
+  exportTailoredPdf(tailoredResumeId: string): Promise<Blob> {
+    return fetchPdf(`/api/export/tailored/${tailoredResumeId}/pdf`, 'Export failed')
   },
 }
 
 export const tailoringApi = {
-  async analyze(jobId: string): Promise<TailoringAnalysis> {
+  async analyze(jobId: string, signal?: AbortSignal): Promise<TailoringAnalysis> {
     const result = await request<TailoringAnalysis>(
       `/api/jobs/${jobId}/tailoring/analysis`,
+      { signal },
     )
     if (!result) throw new ApiError('Empty response from analysis', 500)
     return result
   },
 
-  async generateSuggestions(jobId: string): Promise<TailoringSuggestionBatch> {
+  async generateSuggestions(
+    jobId: string,
+    signal?: AbortSignal,
+  ): Promise<TailoringSuggestionBatch> {
     const result = await request<TailoringSuggestionBatch>(
       `/api/jobs/${jobId}/tailoring/suggestions`,
-      { method: 'POST' },
+      { method: 'POST', signal },
     )
     if (!result) throw new ApiError('Empty response from suggestions', 500)
     return result
@@ -314,6 +304,8 @@ export const tailoringApi = {
       content: ResumeContent
       acceptedSuggestionIds?: string[]
       rejectedSuggestionIds?: string[]
+      /** Text the user edited, by suggestion id. The server applies these to the accepted suggestions. */
+      suggestionEdits?: Record<string, string>
     },
   ): Promise<TailoredResumeDetail> {
     const saved = await request<TailoredResumeDetail>(
@@ -325,6 +317,7 @@ export const tailoringApi = {
           content: params.content,
           acceptedSuggestionIds: params.acceptedSuggestionIds ?? [],
           rejectedSuggestionIds: params.rejectedSuggestionIds ?? [],
+          suggestionEdits: params.suggestionEdits ?? {},
         }),
       },
     )

@@ -1,5 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { AuthLayout } from '../components/AuthLayout'
+import { Button } from '../components/ui/Button'
+import { TextField } from '../components/ui/Field'
 import { AuthError, useAuth } from '../lib/auth'
 
 export function RegisterPage() {
@@ -52,96 +55,56 @@ export function RegisterPage() {
   const canSubmit = emailValid && passwordValid && confirmValid && !isSubmitting
 
   return (
-    <div className="auth-page">
-      <div className="auth-card">
-        <div className="auth-header">
-          <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true" className="auth-logo-icon">
-            <rect x="1.5" y="1.5" width="13" height="13" rx="3" stroke="currentColor" strokeWidth="1.5" />
-            <path d="M4.5 8h7M4.5 5.5h4M4.5 10.5h5.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-          </svg>
-          <h1 className="auth-title">Create your account</h1>
+    <AuthLayout
+      title="Create your account"
+      footer={
+        <>
+          Already have an account? <Link to="/login" className="auth-link">Sign in</Link>
+        </>
+      }
+    >
+      {error && (
+        <div className="form-alert" role="alert">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} noValidate>
+        <div className="auth-fields">
+          <TextField
+            id="register-email"
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+            autoFocus
+            error={emailTouched && !emailValid ? ['Enter a valid email address.'] : undefined}
+          />
+          <TextField
+            id="register-password"
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+            error={passwordTouched && !passwordValid ? ['Must be at least 12 characters.'] : undefined}
+          />
+          <TextField
+            id="register-confirm"
+            label="Confirm password"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            autoComplete="new-password"
+            error={confirmTouched && !confirmValid ? ['Passwords do not match.'] : undefined}
+          />
         </div>
 
-        {error && (
-          <div className="form-alert" role="alert">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} noValidate>
-          <div className="auth-fields">
-            <div className="form-field">
-              <label className="form-label" htmlFor="register-email">
-                Email
-              </label>
-              <input
-                id="register-email"
-                type="email"
-                className={`form-input${emailTouched && !emailValid ? ' form-input--invalid' : ''}`}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                autoFocus
-              />
-              {emailTouched && !emailValid && (
-                <p className="form-error" role="alert">
-                  Enter a valid email address.
-                </p>
-              )}
-            </div>
-
-            <div className="form-field">
-              <label className="form-label" htmlFor="register-password">
-                Password
-              </label>
-              <input
-                id="register-password"
-                type="password"
-                className={`form-input${passwordTouched && !passwordValid ? ' form-input--invalid' : ''}`}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="new-password"
-              />
-              {passwordTouched && !passwordValid && (
-                <p className="form-error" role="alert">
-                  Must be at least 12 characters.
-                </p>
-              )}
-            </div>
-
-            <div className="form-field">
-              <label className="form-label" htmlFor="register-confirm">
-                Confirm password
-              </label>
-              <input
-                id="register-confirm"
-                type="password"
-                className={`form-input${confirmTouched && !confirmValid ? ' form-input--invalid' : ''}`}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                autoComplete="new-password"
-              />
-              {confirmTouched && !confirmValid && (
-                <p className="form-error" role="alert">
-                  Passwords do not match.
-                </p>
-              )}
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            className="btn btn-primary auth-submit"
-            disabled={!canSubmit}
-          >
-            {isSubmitting ? 'Creating account…' : 'Create account'}
-          </button>
-        </form>
-
-        <p className="auth-footer">
-          Already have an account? <Link to="/login" className="auth-link">Sign in</Link>
-        </p>
-      </div>
-    </div>
+        <Button type="submit" variant="primary" className="auth-submit" disabled={!canSubmit}>
+          {isSubmitting ? 'Creating account…' : 'Create account'}
+        </Button>
+      </form>
+    </AuthLayout>
   )
 }

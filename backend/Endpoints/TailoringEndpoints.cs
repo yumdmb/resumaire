@@ -153,14 +153,33 @@ public static class TailoringEndpoints
         }
 
         var now = DateTimeOffset.UtcNow;
+
+        // A new batch replaces any suggestions the user never reviewed, so stale ones cannot be saved later.
+        var staleSuggestions = await dbContext.TailoringSuggestions
+            .Where(value =>
+                value.UserId == userId &&
+                value.JobId == job.Id &&
+                value.TailoredResumeId == null &&
+                value.ReviewState == TailoringSuggestionReviewState.Pending)
+            .ToListAsync(cancellationToken);
+
+        foreach (var stale in staleSuggestions)
+        {
+            stale.ReviewState = TailoringSuggestionReviewState.Superseded;
+            stale.ReviewedAt = now;
+        }
+
         var suggestions = guardrailResult.Suggestions
             .Select(suggestion => new TailoringSuggestion
             {
                 UserId = userId,
                 JobId = job.Id,
                 SourceBaseResumeId = baseResume.Id,
+                SourceBaseResumeRevision = baseResume.Revision,
                 ReviewState = TailoringSuggestionReviewState.Pending,
                 TargetSection = suggestion.TargetSection,
+                TargetPath = suggestion.TargetPath,
+                Operation = suggestion.Operation,
                 OriginalContentJson = SerializeOptionalString(suggestion.OriginalContent),
                 SuggestedContentJson = JsonSerializer.Serialize(suggestion.SuggestedContent, JsonOptions),
                 Rationale = suggestion.Rationale,
@@ -264,6 +283,63 @@ public static class TailoringEndpoints
             return errors.ToValidationProblem();
         }
 
+        var staleReason = FindStaleSuggestionReason(suggestions, baseResume);
+        if (staleReason is not null)
+        {
+            return Results.Problem(
+                statusCode: StatusCodes.Status409Conflict,
+                title: "Suggestions can no longer be saved",
+                detail: staleReason);
+        }
+
+        var accepted = suggestions.Where(suggestion => acceptedSuggestionIds.Contains(suggestion.Id)).ToList();
+        var editedTextById = new Dictionary<Guid, string>();
+        var content = request.Content;
+
+        // Suggestions with a target are applied on the server, so the saved resume can only differ from the
+        // base resume by exactly what was accepted.
+        if (accepted.Count > 0 && accepted.All(suggestion => suggestion.TargetPath.Length > 0))
+        {
+            content = DeserializeResumeContent(baseResume.ContentJson);
+
+            foreach (var suggestion in accepted)
+            {
+                var text = request.SuggestionEdits is not null &&
+                           request.SuggestionEdits.TryGetValue(suggestion.Id, out var edited) &&
+                           !string.IsNullOrWhiteSpace(edited)
+                    ? edited.Trim()
+                    : DeserializeRequiredString(suggestion.SuggestedContentJson);
+
+                if (text.Length > MaxAcceptedSuggestionLength)
+                {
+                    AddValidationError(
+                        errors,
+                        nameof(request.SuggestionEdits),
+                        $"Suggestion text cannot exceed {MaxAcceptedSuggestionLength} characters.");
+                    continue;
+                }
+
+                if (!ResumeContentEditor.TryValidateTarget(content, suggestion.TargetPath, suggestion.Operation, out _, out var targetError))
+                {
+                    AddValidationError(errors, nameof(request.AcceptedSuggestionIds), targetError);
+                    continue;
+                }
+
+                editedTextById[suggestion.Id] = text;
+                content = ResumeContentEditor.Apply(content, suggestion.TargetPath, suggestion.Operation, text);
+            }
+        }
+
+        foreach (var (field, messages) in ResumeContentValidator.Validate(content, nameof(request.Content)))
+        {
+            errors[field] = messages;
+        }
+
+        if (errors.Count > 0)
+        {
+            return errors.ToValidationProblem();
+        }
+
         var nextVersionNumber = (await dbContext.TailoredResumes
             .Where(resume => resume.UserId == userId && resume.JobId == jobId)
             .Select(resume => (int?)resume.VersionNumber)
@@ -280,7 +356,7 @@ public static class TailoringEndpoints
             SchemaVersion = ResumeContentSchema.CurrentVersion,
             VersionNumber = nextVersionNumber,
             Name = NormalizeOptionalText(request.Name),
-            ContentJson = JsonSerializer.Serialize(request.Content, JsonOptions),
+            ContentJson = JsonSerializer.Serialize(content, JsonOptions),
             CreatedAt = now,
             UpdatedAt = now
         };
@@ -295,7 +371,9 @@ public static class TailoringEndpoints
             if (acceptedSuggestionIds.Contains(suggestion.Id))
             {
                 suggestion.ReviewState = TailoringSuggestionReviewState.Accepted;
-                suggestion.AcceptedContentJson = suggestion.SuggestedContentJson;
+                suggestion.AcceptedContentJson = editedTextById.TryGetValue(suggestion.Id, out var appliedText)
+                    ? JsonSerializer.Serialize(appliedText, JsonOptions)
+                    : suggestion.SuggestedContentJson;
                 continue;
             }
 
@@ -306,11 +384,45 @@ public static class TailoringEndpoints
         job.SelectedTailoredResumeId = tailoredResume.Id;
         job.UpdatedAt = now;
 
-        await dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            // The unique (user, job, version number) index rejected a concurrent save.
+            return Results.Problem(
+                statusCode: StatusCodes.Status409Conflict,
+                title: "Version conflict",
+                detail: "Another version was saved at the same time. Save again.");
+        }
 
         return ApiResponses.Created(
             $"/api/jobs/{jobId}/tailoring/versions/{tailoredResume.Id}",
             MapTailoredResumeDetailResponse(tailoredResume));
+    }
+
+    private const int MaxAcceptedSuggestionLength = 1000;
+
+    private static string? FindStaleSuggestionReason(
+        IReadOnlyCollection<TailoringSuggestion> suggestions,
+        BaseResume baseResume)
+    {
+        foreach (var suggestion in suggestions)
+        {
+            if (suggestion.ReviewState != TailoringSuggestionReviewState.Pending)
+            {
+                return "A suggestion was already reviewed or replaced. Generate new suggestions.";
+            }
+
+            if (suggestion.SourceBaseResumeId != baseResume.Id ||
+                (suggestion.SourceBaseResumeRevision is { } revision && revision != baseResume.Revision))
+            {
+                return "The base resume changed after these suggestions were generated. Generate new suggestions.";
+            }
+        }
+
+        return null;
     }
 
     private static async Task<BaseResume?> GetSelectedBaseResumeAsync(
@@ -339,6 +451,8 @@ public static class TailoringEndpoints
             suggestion.Id,
             suggestion.ReviewState.ToString(),
             suggestion.TargetSection,
+            suggestion.TargetPath,
+            suggestion.Operation,
             DeserializeOptionalString(suggestion.OriginalContentJson),
             DeserializeRequiredString(suggestion.SuggestedContentJson),
             suggestion.Rationale,
@@ -364,7 +478,8 @@ public static class TailoringEndpoints
     {
         var errors = new Dictionary<string, string[]>(StringComparer.Ordinal);
 
-        if (request.Content is null)
+        var hasAcceptedSuggestions = request.AcceptedSuggestionIds is { Count: > 0 };
+        if (request.Content is null && !hasAcceptedSuggestions)
         {
             AddValidationError(errors, nameof(request.Content), "Tailored resume content is required.");
         }

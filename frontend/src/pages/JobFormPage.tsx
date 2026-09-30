@@ -1,6 +1,9 @@
+import { Page } from '../components/ui/Page'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useEffect, useMemo, useState } from 'react'
 import { ApiError, jobsApi } from '../lib/api'
+import { Button, ButtonLink } from '../components/ui/Button'
+import { TextField } from '../components/ui/Field'
 import {
   JOB_STATUSES,
   type FieldErrors,
@@ -146,7 +149,7 @@ export function JobFormPage({ mode }: { mode: Mode }) {
 
   if (loadState.status === 'loading') {
     return (
-      <div className="page" aria-busy="true">
+      <Page width="narrow" aria-busy="true">
         <FormHeader heading={heading} backHref={backHref} backLabel={backLabel} />
         <div className="form-card">
           <div className="skeleton skeleton-line" style={{ width: '30%' }} />
@@ -159,13 +162,13 @@ export function JobFormPage({ mode }: { mode: Mode }) {
             style={{ width: '80%', marginTop: 12 }}
           />
         </div>
-      </div>
+      </Page>
     )
   }
 
   if (loadState.status === 'not_found') {
     return (
-      <div className="page">
+      <Page width="narrow">
         <FormHeader heading={heading} backHref="/" backLabel="Jobs" />
         <div className="empty-state">
           <p className="empty-state-title">Job not found</p>
@@ -176,13 +179,13 @@ export function JobFormPage({ mode }: { mode: Mode }) {
             Back to jobs
           </Link>
         </div>
-      </div>
+      </Page>
     )
   }
 
   if (loadState.status === 'error') {
     return (
-      <div className="page">
+      <Page width="narrow">
         <FormHeader heading={heading} backHref={backHref} backLabel={backLabel} />
         <div className="empty-state">
           <p className="empty-state-title">Could not load this job</p>
@@ -191,12 +194,12 @@ export function JobFormPage({ mode }: { mode: Mode }) {
             Retry
           </button>
         </div>
-      </div>
+      </Page>
     )
   }
 
   return (
-    <div className="page">
+    <Page width="narrow">
       <FormHeader heading={heading} backHref={backHref} backLabel={backLabel} />
 
       {errors._general?.length ? (
@@ -295,15 +298,15 @@ export function JobFormPage({ mode }: { mode: Mode }) {
         </div>
 
         <div className="form-actions">
-          <Link to={backHref} className="btn btn-secondary">
+          <ButtonLink to={backHref} variant="secondary">
             Cancel
-          </Link>
-          <button type="submit" className="btn btn-primary" disabled={isSaving}>
+          </ButtonLink>
+          <Button type="submit" variant="primary" disabled={isSaving}>
             {isSaving ? 'Saving' : isEdit ? 'Save changes' : 'Add job'}
-          </button>
+          </Button>
         </div>
       </form>
-    </div>
+    </Page>
   )
 }
 
@@ -353,21 +356,15 @@ function Field({
   error?: string[]
 }) {
   return (
-    <div className="form-field">
-      <label className="form-label" htmlFor={field}>
-        {label}
-        {required ? <span className="form-required"> *</span> : null}
-      </label>
-      <input
-        id={field}
-        type={type}
-        className="form-input"
-        placeholder={placeholder}
-        required={required}
-        {...bind}
-      />
-      <FieldError messages={error} />
-    </div>
+    <TextField
+      id={field}
+      label={label}
+      type={type}
+      placeholder={placeholder}
+      required={required}
+      error={error}
+      {...bind}
+    />
   )
 }
 

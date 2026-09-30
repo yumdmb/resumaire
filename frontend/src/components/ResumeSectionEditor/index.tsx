@@ -1,9 +1,11 @@
 import type { ResumeContent } from '../../lib/types'
+import { ActivitiesEditor } from './ActivitiesEditor'
 import { CertificationsEditor } from './CertificationsEditor'
 import { EducationEditor } from './EducationEditor'
 import { ExperienceEditor } from './ExperienceEditor'
 import { LinksEditor } from './LinksEditor'
 import { PersonalInfoEditor } from './PersonalInfoEditor'
+import { ProjectsEditor } from './ProjectsEditor'
 import { SkillsEditor } from './SkillsEditor'
 import { SummaryEditor } from './SummaryEditor'
 import type { ResumeSectionId, SectionUpdater } from './sections'
@@ -53,8 +55,12 @@ export function ResumeSectionEditor({
     case 'skills':
       return (
         <SkillsEditor
-          value={content.skills}
-          onChange={(v) => updateSection('skills', v)}
+          skills={content.skills}
+          skillGroups={content.skillGroups ?? []}
+          onChange={(skills, groups) => {
+            updateSection('skills', skills)
+            updateSection('skillGroups', groups)
+          }}
         />
       )
     case 'experience':
@@ -70,6 +76,22 @@ export function ResumeSectionEditor({
         <EducationEditor
           value={content.education}
           onChange={(v) => updateSection('education', v)}
+          idPrefix={idPrefix}
+        />
+      )
+    case 'projects':
+      return (
+        <ProjectsEditor
+          value={content.projects ?? []}
+          onChange={(v) => updateSection('projects', v)}
+          idPrefix={idPrefix}
+        />
+      )
+    case 'activities':
+      return (
+        <ActivitiesEditor
+          value={content.activities ?? []}
+          onChange={(v) => updateSection('activities', v)}
           idPrefix={idPrefix}
         />
       )

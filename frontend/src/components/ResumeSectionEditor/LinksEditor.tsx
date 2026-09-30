@@ -1,6 +1,7 @@
+import { Button } from '../ui/Button'
 import type { ResumeLink } from '../../lib/types'
 import { emptyLink } from '../../lib/types'
-import { CloseIcon } from './CloseIcon'
+import { EditorEntryHeader } from './EditorEntryHeader'
 
 interface Props {
   value: ResumeLink[]
@@ -19,20 +20,12 @@ export function LinksEditor({ value, onChange, idPrefix }: Props) {
     <div className="editor-fields">
       {value.map((entry, i) => (
         <div key={entry.id ?? i} className="editor-entry">
-          <div className="editor-entry-header">
-            <span className="editor-entry-num">{i + 1}</span>
-            <span className="editor-entry-title">
-              {entry.label || 'New link'}
-            </span>
-            <button
-              type="button"
-              className="btn-icon"
-              onClick={() => onChange(value.filter((_, idx) => idx !== i))}
-              aria-label="Remove link"
-            >
-              <CloseIcon />
-            </button>
-          </div>
+          <EditorEntryHeader
+            num={i + 1}
+            title={entry.label || 'New link'}
+            onRemove={() => onChange(value.filter((_, idx) => idx !== i))}
+            removeLabel="Remove link"
+          />
           <div className="form-row-two">
             <div className="form-field">
               <label className="form-label" htmlFor={`${idPrefix}link-${i}-label`}>
@@ -43,9 +36,7 @@ export function LinksEditor({ value, onChange, idPrefix }: Props) {
                 className="form-input"
                 placeholder="e.g. GitHub"
                 value={entry.label ?? ''}
-                onChange={(e) =>
-                  updateEntry(i, { ...entry, label: e.target.value || null })
-                }
+                onChange={(e) => updateEntry(i, { ...entry, label: e.target.value || null })}
               />
             </div>
             <div className="form-field">
@@ -58,21 +49,17 @@ export function LinksEditor({ value, onChange, idPrefix }: Props) {
                 className="form-input"
                 placeholder="https://…"
                 value={entry.url ?? ''}
-                onChange={(e) =>
-                  updateEntry(i, { ...entry, url: e.target.value || null })
-                }
+                onChange={(e) => updateEntry(i, { ...entry, url: e.target.value || null })}
               />
             </div>
           </div>
         </div>
       ))}
-      <button
-        type="button"
-        className="btn btn-secondary editor-add-btn"
+      <Button className="editor-add-btn"
         onClick={() => onChange([...value, emptyLink()])}
       >
         + Add link
-      </button>
+      </Button>
     </div>
   )
 }

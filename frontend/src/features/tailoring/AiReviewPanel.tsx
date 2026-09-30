@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { Button } from '../../components/ui/Button'
+import { TextField } from '../../components/ui/Field'
 import type { ResumeContent, TailoringAnalysis, TailoringSuggestionBatch } from '../../lib/types'
 import { applyAcceptedSuggestions } from './applyAcceptedSuggestions'
 import { SuggestionCard } from './SuggestionCard'
@@ -11,6 +13,8 @@ interface Props {
   baseContent: ResumeContent
   onSave: (content: ResumeContent, suggestions: SuggestionState[], name: string) => void
   onCancel: () => void
+  /** True while a save is in flight. The panel stays mounted so a failed save keeps every decision. */
+  isSaving?: boolean
 }
 
 export function AiReviewPanel({
@@ -20,6 +24,7 @@ export function AiReviewPanel({
   baseContent,
   onSave,
   onCancel,
+  isSaving = false,
 }: Props) {
   const [suggestions, setSuggestions] = useState<SuggestionState[]>(initialSuggestions)
   const [versionName, setVersionName] = useState('')
@@ -75,22 +80,12 @@ export function AiReviewPanel({
           </span>
         </div>
         <div className="tailor-summary-actions">
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={acceptAll}
-            style={{ fontSize: 12, padding: '4px 10px' }}
-          >
+          <Button small onClick={acceptAll}>
             Accept all
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={rejectAll}
-            style={{ fontSize: 12, padding: '4px 10px' }}
-          >
+          </Button>
+          <Button small onClick={rejectAll}>
             Reject all
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -145,8 +140,8 @@ export function AiReviewPanel({
                 not added as suggestions.
               </p>
               <div className="tailor-gap-list">
-                {batch.gapNotes.map((note) => (
-                  <div key={note.keyword} className="tailor-gap-row">
+                {batch.gapNotes.map((note, index) => (
+                  <div key={`${note.keyword}-${index}`} className="tailor-gap-row">
                     <code className="tailor-gap-keyword">{note.keyword}</code>
                     <span className="tailor-gap-reason">{note.reason}</span>
                   </div>
@@ -189,25 +184,27 @@ export function AiReviewPanel({
 
       {/* Save bar */}
       <div className="tailor-save-bar">
-        <div className="form-field" style={{ flex: 1, maxWidth: 320 }}>
-          <label className="form-label" htmlFor="ai-version-name">
-            Version name
-          </label>
-          <input
+        <div className="tailor-save-name">
+          <TextField
             id="ai-version-name"
-            className="form-input"
+            label="Version name"
             placeholder="e.g. Senior Frontend Engineer v1"
             value={versionName}
             onChange={(e) => setVersionName(e.target.value)}
           />
         </div>
         <div className="tailor-save-actions">
-          <button type="button" className="btn btn-secondary" onClick={onCancel}>
+          {acceptedCount === 0 && suggestions.length > 0 && (
+            <span className="prose-muted tailor-save-note" role="status">
+              No suggestions accepted. Saving keeps your base resume unchanged.
+            </span>
+          )}
+          <Button onClick={onCancel} disabled={isSaving}>
             Cancel
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary"
+          </Button>
+          <Button
+            variant="primary"
+            disabled={isSaving}
             onClick={() =>
               onSave(
                 applyAcceptedSuggestions(baseContent, suggestions),
@@ -216,8 +213,8 @@ export function AiReviewPanel({
               )
             }
           >
-            Save version
-          </button>
+            {isSaving ? 'Saving…' : 'Save version'}
+          </Button>
         </div>
       </div>
     </div>
