@@ -14,6 +14,17 @@ describe('TailoringPage', () => {
     window.localStorage.clear()
   })
 
+  it('offers AI settings when a personal connection is missing while keeping manual editing available', async () => {
+    const user = userEvent.setup()
+    stubApi((url, init) => url.endsWith('/tailoring/suggestions') && init?.method === 'POST'
+      ? new Response(JSON.stringify({ detail: 'Connect your provider in AI settings.', code: 'ai_settings_required' }),
+        { status: 409, headers: { 'Content-Type': 'application/problem+json' } }) : null)
+    render(<MemoryRouter initialEntries={[`/tailor?jobId=${JOB_ID}`]}><TailoringPage /></MemoryRouter>)
+    await user.click(await screen.findByRole('button', { name: /ai-assisted tailoring/i }))
+    expect(await screen.findByRole('link', { name: 'Open AI settings' })).toHaveAttribute('href', '/settings/ai')
+    expect(screen.getByRole('button', { name: /manual editing/i })).toBeEnabled()
+  })
+
   it('keeps every decision and edit when saving fails, and sends edits on retry', async () => {
     window.localStorage.setItem(AUTH_TOKEN_KEY, 'token')
     const user = userEvent.setup()

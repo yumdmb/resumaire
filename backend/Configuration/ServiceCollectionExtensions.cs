@@ -28,9 +28,8 @@ public static class ServiceCollectionExtensions
         services
             .AddOptions<OpenAiOptions>()
             .Bind(configuration.GetSection(OpenAiOptions.SectionName))
-            .Validate(
-                options => TryCreateAbsoluteHttpUri(NormalizeBaseUrl(options.BaseUrl), out _),
-                "OpenAI:BaseUrl must be an absolute HTTP or HTTPS URL.")
+            .Validate(options => options.MaxOutputTokens is >= 1000 and <= 16000,
+                "OpenAI:MaxOutputTokens must be between 1000 and 16000.")
             .ValidateOnStart();
 
         return services;
@@ -94,16 +93,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IJobKeywordExtractor, JobKeywordExtractor>();
         services.AddScoped<IResumeKeywordComparer, ResumeKeywordComparer>();
         services.AddScoped<TailoringSuggestionGuardrails>();
-        services.AddHttpClient<IAiTailoringSuggestionGenerator, OpenAiTailoringSuggestionGenerator>(client =>
-        {
-            var options = configuration
-                .GetSection(OpenAiOptions.SectionName)
-                .Get<OpenAiOptions>()
-                ?? new OpenAiOptions();
-
-            client.BaseAddress = CreateBaseUri(options.BaseUrl);
-            client.Timeout = TimeSpan.FromSeconds(Math.Max(5, options.TimeoutSeconds));
-        });
 
         services.AddAiTailoringRateLimiting(configuration);
 
@@ -125,38 +114,4 @@ public static class ServiceCollectionExtensions
         return services;
     }
 
-    private static Uri CreateBaseUri(string baseUrl)
-    {
-        var normalizedBaseUrl = NormalizeBaseUrl(baseUrl);
-        if (!TryCreateAbsoluteHttpUri(normalizedBaseUrl, out var uri))
-        {
-            throw new InvalidOperationException("OpenAI:BaseUrl must be an absolute HTTP or HTTPS URL.");
-        }
-
-        return uri;
-    }
-
-    private static string NormalizeBaseUrl(string? baseUrl)
-    {
-        var value = string.IsNullOrWhiteSpace(baseUrl)
-            ? new OpenAiOptions().BaseUrl
-            : baseUrl.Trim();
-
-        return value.EndsWith("/", StringComparison.Ordinal)
-            ? value
-            : $"{value}/";
-    }
-
-    private static bool TryCreateAbsoluteHttpUri(string value, out Uri uri)
-    {
-        if (!Uri.TryCreate(value, UriKind.Absolute, out var createdUri) ||
-            (createdUri.Scheme != Uri.UriSchemeHttp && createdUri.Scheme != Uri.UriSchemeHttps))
-        {
-            uri = null!;
-            return false;
-        }
-
-        uri = createdUri;
-        return true;
-    }
 }

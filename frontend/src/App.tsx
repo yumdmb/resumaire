@@ -11,6 +11,7 @@ import { RegisterPage } from './pages/RegisterPage'
 import { ResumeBuilderPage } from './pages/ResumeBuilderPage'
 import { ResumePreviewPage } from './pages/ResumePreviewPage'
 import { TailoringPage } from './pages/TailoringPage'
+import { AiSettingsPage } from './pages/AiSettingsPage'
 
 const nav = [
   {
@@ -41,6 +42,18 @@ const nav = [
     icon: (
       <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <path d="M2 8h3l2-5 2 10 2-5h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    ),
+  },
+  {
+    to: '/settings/ai',
+    label: 'Settings',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M3 4h10M3 8h10M3 12h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <circle cx="6" cy="4" r="1.5" fill="var(--surface)" stroke="currentColor" />
+        <circle cx="10" cy="8" r="1.5" fill="var(--surface)" stroke="currentColor" />
+        <circle cx="6" cy="12" r="1.5" fill="var(--surface)" stroke="currentColor" />
       </svg>
     ),
   },
@@ -96,6 +109,7 @@ function AppShell() {
           <Route path="resume/preview" element={<ResumePreviewPage />} />
           <Route path="resume/preview/:tailoredResumeId" element={<ResumePreviewPage />} />
           <Route path="tailor" element={<TailoringPage />} />
+          <Route path="settings/ai" element={<AiSettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

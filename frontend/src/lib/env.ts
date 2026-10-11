@@ -4,7 +4,7 @@ function normalizeBaseUrl(value: string | undefined): string {
   const candidate = value?.trim()
 
   if (!candidate) {
-    return fallbackApiBaseUrl
+    return import.meta.env.PROD ? '' : fallbackApiBaseUrl
   }
 
   return candidate.replace(/\/+$/, '')

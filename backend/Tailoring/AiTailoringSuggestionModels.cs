@@ -1,4 +1,5 @@
 using Resumaire.Api.Contracts;
+using Resumaire.Api.Ai;
 
 namespace Resumaire.Api.Tailoring;
 
@@ -8,11 +9,14 @@ public sealed record AiTailoringSuggestionGenerationRequest(
     string JobDescription,
     ResumeContentDto ResumeContent,
     IReadOnlyList<JobKeyword> ExtractedKeywords,
-    ResumeKeywordComparisonResult Comparison);
+    ResumeKeywordComparisonResult Comparison,
+    AiConnection? Connection = null);
 
 public sealed record AiTailoringSuggestionGenerationResult(
     IReadOnlyList<AiTailoringSuggestionDraft> Suggestions,
-    IReadOnlyList<AiTailoringGapNote> GapNotes);
+    IReadOnlyList<AiTailoringGapNote> GapNotes,
+    int? InputTokens = null,
+    int? OutputTokens = null);
 
 public sealed record AiTailoringSuggestionDraft(
     string TargetSection,
