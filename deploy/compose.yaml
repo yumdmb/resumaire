@@ -1,0 +1,76 @@
+name: resumaire
+services:
+  database:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: resumaire
+      POSTGRES_USER: resumaire
+      POSTGRES_PASSWORD_FILE: /run/secrets/database_password
+    secrets: [database_password]
+    volumes: [database_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U resumaire -d resumaire"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+    networks: [private]
+
+  migrate:
+    image: resumaire-backend:local
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    entrypoint: [/app/efbundle]
+    environment:
+      ConnectionStrings__DefaultConnection: ${DATABASE_CONNECTION_STRING:?Set DATABASE_CONNECTION_STRING in deploy/.env}
+    depends_on:
+      database: {condition: service_healthy}
+    networks: [private]
+
+  backend:
+    image: resumaire-backend:local
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    environment:
+      ConnectionStrings__DefaultConnection: ${DATABASE_CONNECTION_STRING:?Set DATABASE_CONNECTION_STRING in deploy/.env}
+      Cors__AllowedOrigins__0: ${PUBLIC_ORIGIN:?Set PUBLIC_ORIGIN to the public HTTPS origin}
+      DataProtection__KeyPath: /keys
+      DataProtection__CertificatePath: /run/secrets/data_protection_certificate
+      Proxy__KnownProxies__0: 172.30.0.10
+      AiTailoring__RequestsPerMinute: 5
+      AiTailoring__RequestsPerDay: 50
+    secrets: [data_protection_certificate]
+    volumes: [protection_keys:/keys]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+    restart: unless-stopped
+    networks: [private]
+
+  frontend:
+    image: resumaire-frontend:local
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "${BIND_ADDRESS:-0.0.0.0}:${HTTP_PORT:-80}:80"
+      - "${BIND_ADDRESS:-0.0.0.0}:${HTTPS_PORT:-443}:443"
+    secrets: [tls_certificate, tls_private_key]
+    depends_on: [backend]
+    restart: unless-stopped
+    networks:
+      private: {ipv4_address: 172.30.0.10}
+
+networks:
+  private:
+    ipam:
+      config: [{subnet: 172.30.0.0/24}]
+volumes:
+  database_data:
+  protection_keys:
+secrets:
+  database_password: {file: ./secrets/database-password.txt}
+  data_protection_certificate: {file: ./secrets/data-protection.pfx}
+  tls_certificate: {file: ./secrets/tls-fullchain.pem}
+  tls_private_key: {file: ./secrets/tls-private-key.pem}

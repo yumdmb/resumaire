@@ -1,13 +1,13 @@
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using Resumaire.Api.Configuration;
+using Resumaire.Api.Ai;
+using Resumaire.Api.Contracts;
 
 namespace Resumaire.Api.Tailoring;
 
 public sealed class OpenAiTailoringSuggestionGenerator(
-    HttpClient httpClient,
+    IAiProviderClient providerClient,
     IOptions<OpenAiOptions> options,
     ILogger<OpenAiTailoringSuggestionGenerator> logger)
     : IAiTailoringSuggestionGenerator
@@ -18,40 +18,11 @@ public sealed class OpenAiTailoringSuggestionGenerator(
         AiTailoringSuggestionGenerationRequest request,
         CancellationToken cancellationToken)
     {
-        var openAiOptions = options.Value;
-        if (string.IsNullOrWhiteSpace(openAiOptions.ApiKey))
+        if (request.Connection is null)
         {
-            throw new AiTailoringUnavailableException("OpenAI:ApiKey is not configured.");
+            throw new AiConnectionException(409, "ai_settings_required", "Connect an AI provider in Settings → AI before generating suggestions.");
         }
-
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, "responses");
-        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", openAiOptions.ApiKey);
-        httpRequest.Content = JsonContent.Create(BuildRequestBody(openAiOptions, request), options: JsonOptions);
-
-        string body;
-        try
-        {
-            using var response = await httpClient.SendAsync(httpRequest, cancellationToken);
-            body = await response.Content.ReadAsStringAsync(cancellationToken);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                // The provider body can echo resume or job text, so only the status code is logged.
-                logger.LogWarning("AI tailoring request failed with status {StatusCode}.", (int)response.StatusCode);
-                throw new AiTailoringProviderException(DescribeFailure(response.StatusCode));
-            }
-        }
-        catch (HttpRequestException exception)
-        {
-            logger.LogWarning(exception, "AI tailoring request could not reach the provider.");
-            throw new AiTailoringProviderException("AI provider could not be reached.");
-        }
-        catch (TaskCanceledException exception) when (!cancellationToken.IsCancellationRequested)
-        {
-            logger.LogWarning(exception, "AI tailoring request timed out.");
-            throw new AiTailoringProviderException("AI provider timed out.");
-        }
-
+        var body = await providerClient.RespondAsync(request.Connection, BuildRequestBody(options.Value, request), cancellationToken);
         return ParseResponse(body);
     }
 
@@ -71,6 +42,8 @@ public sealed class OpenAiTailoringSuggestionGenerator(
         using (document)
         {
             var root = document.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+                throw new AiTailoringProviderException("AI provider returned an unreadable response.");
             ThrowIfIncomplete(root);
 
             var outputText = ExtractOutputText(root);
@@ -122,7 +95,8 @@ public sealed class OpenAiTailoringSuggestionGenerator(
                 .Select(note => new AiTailoringGapNote(note.Keyword!.Trim(), (note.Reason ?? string.Empty).Trim()))
                 .ToArray();
 
-            return new AiTailoringSuggestionGenerationResult(suggestions, gapNotes);
+            var (inputTokens, outputTokens) = AiResponseMetadata.Tokens(root);
+            return new AiTailoringSuggestionGenerationResult(suggestions, gapNotes, inputTokens, outputTokens);
         }
     }
 
@@ -132,7 +106,8 @@ public sealed class OpenAiTailoringSuggestionGenerator(
     {
         var body = new Dictionary<string, object?>
         {
-            ["model"] = openAiOptions.EffectiveModel,
+            ["model"] = request.Connection!.Model.Id,
+            ["store"] = false,
             ["instructions"] = Instructions,
             ["input"] = BuildInput(request),
             ["text"] = new
@@ -148,22 +123,8 @@ public sealed class OpenAiTailoringSuggestionGenerator(
             ["max_output_tokens"] = openAiOptions.MaxOutputTokens
         };
 
-        // Reasoning models reject a temperature parameter, so it is only sent when configured.
-        if (openAiOptions.Temperature is { } temperature)
-        {
-            body["temperature"] = temperature;
-        }
-
         return body;
     }
-
-    private static string DescribeFailure(System.Net.HttpStatusCode statusCode) => (int)statusCode switch
-    {
-        401 or 403 => "AI provider rejected the configured API key.",
-        429 => "AI provider rate limit was reached. Try again shortly.",
-        >= 500 => "AI provider is unavailable. Try again shortly.",
-        _ => "AI suggestion generation failed."
-    };
 
     private static void ThrowIfIncomplete(JsonElement root)
     {
@@ -191,7 +152,7 @@ public sealed class OpenAiTailoringSuggestionGenerator(
         {
             keyword = keyword.Keyword.Text,
             category = keyword.Keyword.Category,
-            evidence = keyword.Evidence.Select(evidence => new
+            evidence = keyword.Evidence.Where(evidence => IsProfessionalPath(evidence.Path)).Select(evidence => new
             {
                 evidence.Path,
                 evidence.Section,
@@ -209,7 +170,7 @@ public sealed class OpenAiTailoringSuggestionGenerator(
         {
             keyword = opportunity.Keyword.Text,
             suggestedSections = opportunity.SuggestedSections,
-            currentEvidence = opportunity.CurrentEvidence.Select(evidence => new
+            currentEvidence = opportunity.CurrentEvidence.Where(evidence => IsProfessionalPath(evidence.Path)).Select(evidence => new
             {
                 evidence.Path,
                 evidence.Section,
@@ -217,7 +178,14 @@ public sealed class OpenAiTailoringSuggestionGenerator(
             })
         });
 
-        return JsonSerializer.Serialize(new
+        var resume = request.ResumeContent with
+        {
+            PersonalInfo = request.ResumeContent.PersonalInfo is { } info ? new ResumePersonalInfoDto(null, null, null, null, info.Headline, null) : null,
+            Links = [],
+            Certifications = request.ResumeContent.Certifications?.Select(item => item with { CredentialId = null, Url = null }).ToArray(),
+            Projects = request.ResumeContent.Projects?.Select(item => item with { Url = null }).ToArray()
+        };
+        var input = JsonSerializer.Serialize(new
         {
             job = new
             {
@@ -225,13 +193,21 @@ public sealed class OpenAiTailoringSuggestionGenerator(
                 title = request.JobTitle,
                 description = Truncate(request.JobDescription, MaxJobDescriptionCharacters)
             },
-            resume = request.ResumeContent,
+            resume,
             extractedKeywords = request.ExtractedKeywords,
             supportedKeywords,
             missingKeywords,
             reorderOpportunities
         }, JsonOptions);
+        if (input.Length > 64000)
+            throw new AiConnectionException(413, "resume_too_large", "Your resume is too long for AI tailoring. Shorten its content or edit manually.");
+        return input;
     }
+
+    private static bool IsProfessionalPath(string path) =>
+        !path.StartsWith("Links", StringComparison.Ordinal) &&
+        (!path.StartsWith("PersonalInfo", StringComparison.Ordinal) || path == "PersonalInfo.Headline") &&
+        !path.EndsWith(".CredentialId", StringComparison.Ordinal) && !path.EndsWith(".Url", StringComparison.Ordinal);
 
     private static string NormalizeStructuredOutputText(string outputText)
     {
@@ -275,7 +251,7 @@ public sealed class OpenAiTailoringSuggestionGenerator(
 
         foreach (var outputItem in output.EnumerateArray())
         {
-            if (!outputItem.TryGetProperty("content", out var content) ||
+            if (outputItem.ValueKind != JsonValueKind.Object || !outputItem.TryGetProperty("content", out var content) ||
                 content.ValueKind is not JsonValueKind.Array)
             {
                 continue;
@@ -283,7 +259,7 @@ public sealed class OpenAiTailoringSuggestionGenerator(
 
             foreach (var contentItem in content.EnumerateArray())
             {
-                if (!contentItem.TryGetProperty("type", out var type) ||
+                if (contentItem.ValueKind != JsonValueKind.Object || !contentItem.TryGetProperty("type", out var type) ||
                     type.ValueKind is not JsonValueKind.String)
                 {
                     continue;

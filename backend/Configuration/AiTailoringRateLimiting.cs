@@ -1,14 +1,11 @@
 using System.Security.Claims;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.Extensions.Options;
 
 namespace Resumaire.Api.Configuration;
 
 public static class AiTailoringRateLimiting
 {
-    private const string SuggestionsPathSegment = "/tailoring/suggestions";
-
     public static IServiceCollection AddAiTailoringRateLimiting(
         this IServiceCollection services,
         IConfiguration configuration)
@@ -24,12 +21,9 @@ public static class AiTailoringRateLimiting
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-            // Only POST .../tailoring/suggestions is limited; it is the call that costs money.
-            options.GlobalLimiter = PartitionedRateLimiter.CreateChained(
-                PartitionedRateLimiter.Create<HttpContext, string>(context =>
-                    CreatePartition(context, "minute", limits => limits.RequestsPerMinute, TimeSpan.FromMinutes(1))),
-                PartitionedRateLimiter.Create<HttpContext, string>(context =>
-                    CreatePartition(context, "day", limits => limits.RequestsPerDay, TimeSpan.FromDays(1))));
+            options.AddPolicy("ai-settings", context => RateLimitPartition.GetFixedWindowLimiter(
+                context.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "anonymous-settings",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = 20, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
 
             options.OnRejected = async (context, cancellationToken) =>
             {
@@ -41,8 +35,8 @@ public static class AiTailoringRateLimiting
 
                 await Results.Problem(
                         statusCode: StatusCodes.Status429TooManyRequests,
-                        title: "Too many AI suggestion requests",
-                        detail: "You have reached the AI suggestion limit. Try again later.")
+                        title: "Too many AI settings requests",
+                        detail: "You have reached the AI settings request limit. Try again later.")
                     .ExecuteAsync(context.HttpContext);
             };
         });
@@ -50,31 +44,4 @@ public static class AiTailoringRateLimiting
         return services;
     }
 
-    private static RateLimitPartition<string> CreatePartition(
-        HttpContext context,
-        string window,
-        Func<AiTailoringLimitOptions, int> permitLimit,
-        TimeSpan period)
-    {
-        if (!HttpMethods.IsPost(context.Request.Method) ||
-            !context.Request.Path.Value!.EndsWith(SuggestionsPathSegment, StringComparison.OrdinalIgnoreCase))
-        {
-            return RateLimitPartition.GetNoLimiter($"none:{window}");
-        }
-
-        var limits = context.RequestServices.GetRequiredService<IOptions<AiTailoringLimitOptions>>().Value;
-        var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? context.Connection.RemoteIpAddress?.ToString()
-            ?? "anonymous";
-
-        return RateLimitPartition.GetFixedWindowLimiter(
-            $"{window}:{userId}",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = permitLimit(limits),
-                Window = period,
-                QueueLimit = 0,
-                AutoReplenishment = true
-            });
-    }
 }
