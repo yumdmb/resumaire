@@ -1,5 +1,6 @@
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { BrandMark } from './components/ui/BrandMark'
 import { ThemeToggle } from './components/ui/ThemeToggle'
 import { useAuth } from './lib/auth'
 import { DashboardPage } from './pages/DashboardPage'
@@ -67,7 +68,7 @@ function AppShell() {
       <aside className="rail">
         <div className="rail-brand" aria-label="Resumaire">
           <span className="rail-mark" aria-hidden="true">
-            R
+            <BrandMark size={32} />
           </span>
           <span className="rail-wordmark">Resumaire</span>
         </div>
