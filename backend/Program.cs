@@ -8,9 +8,12 @@ builder.Services
     .AddResumaireOptions(builder.Configuration)
     .AddResumaireDatabase(builder.Configuration)
     .AddResumaireIdentity()
-    .AddResumaireApiServices(builder.Configuration);
+    .AddResumaireApiServices(builder.Configuration)
+    .AddPersonalAiServices(builder.Configuration, builder.Environment);
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages(async statusCodeContext =>

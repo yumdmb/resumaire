@@ -15,9 +15,41 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
     public DbSet<TailoringSuggestion> TailoringSuggestions => Set<TailoringSuggestion>();
 
+    public DbSet<UserAiSettings> UserAiSettings => Set<UserAiSettings>();
+    public DbSet<AiUsageBudget> AiUsageBudgets => Set<AiUsageBudget>();
+    public DbSet<AiUsageRecord> AiUsageRecords => Set<AiUsageRecord>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        builder.Entity<UserAiSettings>(settings =>
+        {
+            settings.HasKey(value => value.UserId);
+            settings.Property(value => value.ProviderId).HasMaxLength(32);
+            settings.Property(value => value.ModelId).HasMaxLength(200);
+            settings.Property(value => value.KeyLastFour).HasMaxLength(4);
+            settings.Property(value => value.CredentialVersion).IsConcurrencyToken();
+            settings.HasOne<ApplicationUser>().WithOne().HasForeignKey<UserAiSettings>(value => value.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<AiUsageBudget>(budget =>
+        {
+            budget.HasKey(value => value.UserId);
+            budget.HasOne<ApplicationUser>().WithOne().HasForeignKey<AiUsageBudget>(value => value.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        builder.Entity<AiUsageRecord>(usage =>
+        {
+            usage.HasKey(value => value.Id);
+            usage.Property(value => value.ProviderId).HasMaxLength(32);
+            usage.Property(value => value.ModelId).HasMaxLength(200);
+            usage.Property(value => value.Operation).HasMaxLength(32);
+            usage.Property(value => value.Status).HasMaxLength(32);
+            usage.HasIndex(value => new { value.UserId, value.StartedAt });
+            usage.HasOne<ApplicationUser>().WithMany().HasForeignKey(value => value.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
 
         builder.Entity<ApplicationUser>(user =>
         {

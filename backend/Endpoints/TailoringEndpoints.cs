@@ -5,6 +5,7 @@ using Resumaire.Api.Data;
 using Resumaire.Api.Data.Entities;
 using Resumaire.Api.Infrastructure.Api;
 using Resumaire.Api.Infrastructure.Auth;
+using Resumaire.Api.Ai;
 using Resumaire.Api.Tailoring;
 
 namespace Resumaire.Api.Endpoints;
@@ -92,6 +93,8 @@ public static class TailoringEndpoints
         IJobKeywordExtractor keywordExtractor,
         IResumeKeywordComparer keywordComparer,
         IAiTailoringSuggestionGenerator suggestionGenerator,
+        AiSettingsService aiSettings,
+        AiUsageService aiUsage,
         TailoringSuggestionGuardrails guardrails,
         CancellationToken cancellationToken)
     {
@@ -118,15 +121,32 @@ public static class TailoringEndpoints
         AiTailoringSuggestionGenerationResult generationResult;
         try
         {
-            generationResult = await suggestionGenerator.GenerateAsync(
+            var connection = await aiSettings.ResolveSavedAsync(userId, cancellationToken);
+            var usage = await aiUsage.ReserveAsync(userId, connection, "Tailoring", cancellationToken);
+            var status = "Failed";
+            int? inputTokens = null, outputTokens = null;
+            try
+            {
+                generationResult = await suggestionGenerator.GenerateAsync(
                 new AiTailoringSuggestionGenerationRequest(
                     job.Title,
                     job.Company,
                     job.Description,
                     resumeContent,
                     extraction.Keywords,
-                    comparison),
+                    comparison,
+                    connection),
                 cancellationToken);
+                status = "Succeeded";
+                inputTokens = generationResult.InputTokens;
+                outputTokens = generationResult.OutputTokens;
+            }
+            catch (OperationCanceledException) { status = "Cancelled"; throw; }
+            finally { await aiUsage.FinishAsync(usage, status, inputTokens, outputTokens); }
+        }
+        catch (AiConnectionException exception)
+        {
+            return AiSettingsEndpoints.Failure(httpContext, exception);
         }
         catch (AiTailoringUnavailableException exception)
         {

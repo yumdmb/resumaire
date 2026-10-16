@@ -221,6 +221,83 @@ namespace Resumaire.Api.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Resumaire.Api.Data.Entities.AiUsageBudget", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ActiveRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("ActiveUntil")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("DayRequests")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("DayWindow")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("MinuteRequests")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("MinuteWindow")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("AiUsageBudgets");
+                });
+
+            modelBuilder.Entity("Resumaire.Api.Data.Entities.AiUsageRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DurationMilliseconds")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("InputTokens")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ModelId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Operation")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<int?>("OutputTokens")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ProviderId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "StartedAt");
+
+                    b.ToTable("AiUsageRecords");
+                });
+
             modelBuilder.Entity("Resumaire.Api.Data.Entities.BaseResume", b =>
                 {
                     b.Property<Guid>("Id")
@@ -456,6 +533,51 @@ namespace Resumaire.Api.Data.Migrations
                     b.ToTable("TailoringSuggestions", (string)null);
                 });
 
+            modelBuilder.Entity("Resumaire.Api.Data.Entities.UserAiSettings", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CredentialVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("EncryptedApiKey")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("KeyLastFour")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("character varying(4)");
+
+                    b.Property<DateTimeOffset>("LastValidatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ModelId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("ProviderId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<bool>("TrainingAcknowledged")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("UserAiSettings");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -499,6 +621,24 @@ namespace Resumaire.Api.Data.Migrations
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.HasOne("Resumaire.Api.Data.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Resumaire.Api.Data.Entities.AiUsageBudget", b =>
+                {
+                    b.HasOne("Resumaire.Api.Data.ApplicationUser", null)
+                        .WithOne()
+                        .HasForeignKey("Resumaire.Api.Data.Entities.AiUsageBudget", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Resumaire.Api.Data.Entities.AiUsageRecord", b =>
                 {
                     b.HasOne("Resumaire.Api.Data.ApplicationUser", null)
                         .WithMany()
@@ -601,6 +741,15 @@ namespace Resumaire.Api.Data.Migrations
                     b.Navigation("TailoredResume");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Resumaire.Api.Data.Entities.UserAiSettings", b =>
+                {
+                    b.HasOne("Resumaire.Api.Data.ApplicationUser", null)
+                        .WithOne()
+                        .HasForeignKey("Resumaire.Api.Data.Entities.UserAiSettings", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Resumaire.Api.Data.ApplicationUser", b =>

@@ -6,12 +6,45 @@ using Microsoft.Extensions.Options;
 using Resumaire.Api.Configuration;
 using Resumaire.Api.Contracts;
 using Resumaire.Api.Tailoring;
+using Resumaire.Api.Ai;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Resumaire.Api.Tests;
 
 public sealed class OpenAiTailoringSuggestionGeneratorTests
 {
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
+    [Fact]
+    public async Task GenerateAsync_ExcludesContactFieldsLinksAndCredentials_AndReadsUsage()
+    {
+        var handler = new StubResponsesHandler(_ => StubResponsesHandler.Ok(
+            """{"output_text":"{\"suggestions\":[],\"gapNotes\":[]}","usage":{"input_tokens":100,"output_tokens":20}}"""));
+        var request = CreateRequest();
+        request = request with { ResumeContent = request.ResumeContent with
+        {
+            PersonalInfo = new("PRIVATE_NAME", "PRIVATE_EMAIL", "PRIVATE_PHONE", "PRIVATE_LOCATION", "Engineer", "PRIVATE_WEBSITE"),
+            Links = [new("link", "PRIVATE_LABEL", "PRIVATE_URL")],
+            Projects = [new("project", "Example", "PRIVATE_PROJECT_URL", "React", ["Built a dashboard."])],
+            Certifications = [new("cert", "Certification", "Issuer", null, null, "PRIVATE_CREDENTIAL", "PRIVATE_CERT_URL")]
+        } };
+        var result = await CreateGenerator(handler).GenerateAsync(request, CancellationToken.None);
+        Assert.DoesNotContain("PRIVATE_", handler.LastRequestBody);
+        Assert.Contains("Engineer", handler.LastRequestBody);
+        Assert.Equal(100, result.InputTokens);
+        Assert.Equal(20, result.OutputTokens);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_RejectsOversizedInputBeforeProviderCall()
+    {
+        var handler = new StubResponsesHandler("{}");
+        var request = CreateRequest();
+        request = request with { ResumeContent = request.ResumeContent with { Summary = new string('x', 65000) } };
+        Assert.Equal(413, (await Assert.ThrowsAsync<AiConnectionException>(() =>
+            CreateGenerator(handler).GenerateAsync(request, CancellationToken.None))).Status);
+        Assert.Null(handler.LastRequestBody);
+    }
 
     [Fact]
     public async Task GenerateAsync_WhenProviderReturnsFencedJson_ParsesStructuredOutput()
@@ -43,7 +76,7 @@ public sealed class OpenAiTailoringSuggestionGeneratorTests
             BaseAddress = new Uri("https://openrouter.ai/api/v1/")
         };
         var generator = new OpenAiTailoringSuggestionGenerator(
-            httpClient,
+            new AiProviderClient(httpClient, new AiProviderRegistry(), new MemoryCache(new MemoryCacheOptions())),
             Options.Create(new OpenAiOptions
             {
                 ApiKey = "test-key",
@@ -100,19 +133,20 @@ public sealed class OpenAiTailoringSuggestionGeneratorTests
     }
 
     [Fact]
-    public async Task GenerateAsync_WhenApiKeyMissing_ThrowsUnavailable()
+    public async Task GenerateAsync_WithoutPersonalConnection_NeverFallsBackToGlobalKey()
     {
-        var generator = CreateGenerator(new StubResponsesHandler("{}"), new OpenAiOptions { ApiKey = null });
+        var generator = CreateGenerator(new StubResponsesHandler("{}"), new OpenAiOptions { ApiKey = "global-key-must-not-be-used" });
 
-        await Assert.ThrowsAsync<AiTailoringUnavailableException>(
-            () => generator.GenerateAsync(CreateRequest(), CancellationToken.None));
+        var exception = await Assert.ThrowsAsync<AiConnectionException>(
+            () => generator.GenerateAsync(CreateRequest() with { Connection = null }, CancellationToken.None));
+        Assert.Equal("ai_settings_required", exception.Code);
     }
 
     [Theory]
     [InlineData(HttpStatusCode.Unauthorized, "API key")]
     [InlineData(HttpStatusCode.TooManyRequests, "rate limit")]
     [InlineData(HttpStatusCode.BadGateway, "unavailable")]
-    [InlineData(HttpStatusCode.BadRequest, "failed")]
+    [InlineData(HttpStatusCode.BadRequest, "unavailable")]
     public async Task GenerateAsync_WhenProviderReturnsError_ThrowsProviderExceptionWithReason(
         HttpStatusCode status,
         string expectedFragment)
@@ -122,7 +156,7 @@ public sealed class OpenAiTailoringSuggestionGeneratorTests
             Content = new StringContent("secret resume text echoed by provider")
         });
 
-        var exception = await Assert.ThrowsAsync<AiTailoringProviderException>(
+        var exception = await Assert.ThrowsAsync<AiConnectionException>(
             () => CreateGenerator(handler).GenerateAsync(CreateRequest(), CancellationToken.None));
 
         Assert.Contains(expectedFragment, exception.Message, StringComparison.OrdinalIgnoreCase);
@@ -167,7 +201,7 @@ public sealed class OpenAiTailoringSuggestionGeneratorTests
     {
         var handler = new StubResponsesHandler(_ => throw new HttpRequestException("connection reset"));
 
-        await Assert.ThrowsAsync<AiTailoringProviderException>(
+        await Assert.ThrowsAsync<AiConnectionException>(
             () => CreateGenerator(handler).GenerateAsync(CreateRequest(), CancellationToken.None));
     }
 
@@ -176,7 +210,7 @@ public sealed class OpenAiTailoringSuggestionGeneratorTests
     {
         var handler = new StubResponsesHandler(_ => throw new TaskCanceledException("timeout"));
 
-        var exception = await Assert.ThrowsAsync<AiTailoringProviderException>(
+        var exception = await Assert.ThrowsAsync<AiConnectionException>(
             () => CreateGenerator(handler).GenerateAsync(CreateRequest(), CancellationToken.None));
 
         Assert.Contains("timed out", exception.Message);
@@ -212,14 +246,16 @@ public sealed class OpenAiTailoringSuggestionGeneratorTests
     }
 
     [Fact]
-    public async Task GenerateAsync_SendsDefaultTemperature()
+    public async Task GenerateAsync_OmitsTemperatureAndDisablesResponseStorage()
     {
         var handler = new StubResponsesHandler("""{"suggestions":[],"gapNotes":[]}""");
 
         await CreateGenerator(handler).GenerateAsync(CreateRequest(), CancellationToken.None);
 
         using var body = JsonDocument.Parse(handler.LastRequestBody!);
-        Assert.Equal(0.2, body.RootElement.GetProperty("temperature").GetDouble());
+        Assert.False(body.RootElement.TryGetProperty("temperature", out _));
+        Assert.False(body.RootElement.GetProperty("store").GetBoolean());
+        Assert.Equal("gpt-4o-mini", body.RootElement.GetProperty("model").GetString());
     }
 
     [Theory]
@@ -238,7 +274,7 @@ public sealed class OpenAiTailoringSuggestionGeneratorTests
         HttpMessageHandler handler,
         OpenAiOptions? options = null) =>
         new(
-            new HttpClient(handler) { BaseAddress = new Uri("https://api.openai.com/v1/") },
+            new AiProviderClient(new HttpClient(handler), new AiProviderRegistry(), new MemoryCache(new MemoryCacheOptions())),
             Options.Create(options ?? new OpenAiOptions { ApiKey = "test-key" }),
             NullLogger<OpenAiTailoringSuggestionGenerator>.Instance);
 
@@ -280,7 +316,8 @@ public sealed class OpenAiTailoringSuggestionGeneratorTests
             "Build React features and Docker deployments.",
             resumeContent,
             [reactKeyword],
-            comparison);
+            comparison,
+            new AiConnection(new AiProviderRegistry().Get("openai"), new AiProviderRegistry().GetModel("openai", "gpt-4o-mini"), "test-key"));
     }
 
     private sealed class StubResponsesHandler : HttpMessageHandler

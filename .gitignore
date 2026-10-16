@@ -22,5 +22,8 @@ frontend/.env.*.local
 backend/.env
 backend/.env.local
 backend/.env.*.local
+deploy/.env
+deploy/secrets/
+deploy/.smoke/
 
 .playwright-mcp/

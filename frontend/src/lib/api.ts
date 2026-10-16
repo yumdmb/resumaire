@@ -1,4 +1,5 @@
 import { frontendEnv } from './env'
+import type { AiSettings, AiConnectionInput, AiCatalog, AiTestResult } from './ai-types'
 import type {
   BaseResumeResponse,
   FieldErrors,
@@ -13,6 +14,32 @@ import type {
 } from './types'
 
 const AUTH_TOKEN_KEY = 'resumaire:accessToken'
+
+export const aiSettingsApi = {
+  async get(signal?: AbortSignal): Promise<AiSettings> {
+    const result = await request<AiSettings>('/api/settings/ai/', { signal })
+    if (!result) throw new ApiError('Could not load AI settings', 500)
+    return result
+  },
+  async discover(input: AiConnectionInput, signal?: AbortSignal): Promise<AiCatalog> {
+    const result = await request<AiCatalog>('/api/settings/ai/models', { method: 'POST', body: JSON.stringify(input), signal })
+    if (!result) throw new ApiError('Could not load models', 500)
+    return result
+  },
+  async test(input: AiConnectionInput, signal?: AbortSignal): Promise<AiTestResult> {
+    const result = await request<AiTestResult>('/api/settings/ai/test', { method: 'POST', body: JSON.stringify(input), signal })
+    if (!result) throw new ApiError('Could not test connection', 500)
+    return result
+  },
+  async save(input: AiConnectionInput, signal?: AbortSignal): Promise<AiSettings> {
+    const result = await request<AiSettings>('/api/settings/ai/', { method: 'PUT', body: JSON.stringify(input), signal })
+    if (!result) throw new ApiError('Could not save AI settings', 500)
+    return result
+  },
+  async remove(signal?: AbortSignal): Promise<void> {
+    await request('/api/settings/ai/key', { method: 'DELETE', signal })
+  },
+}
 
 export function getAccessToken(): string | null {
   try {
@@ -29,12 +56,14 @@ export function hasAccessToken(): boolean {
 export class ApiError extends Error {
   readonly status: number
   readonly fieldErrors: FieldErrors
+  readonly code?: string
 
-  constructor(message: string, status: number, fieldErrors: FieldErrors = {}) {
+  constructor(message: string, status: number, fieldErrors: FieldErrors = {}, code?: string) {
     super(message)
     this.name = 'ApiError'
     this.status = status
     this.fieldErrors = fieldErrors
+    this.code = code
   }
 
   get isUnauthorized(): boolean {
@@ -52,6 +81,7 @@ interface ApiResponseEnvelope<T> {
 }
 
 interface ProblemDetails {
+  code?: string
   title?: string
   detail?: string
   status?: number
@@ -103,7 +133,7 @@ async function request<T>(
         response.statusText ??
         'Request failed'
       const fieldErrors = normalizeFieldErrors(problem?.errors)
-      throw new ApiError(title, response.status, fieldErrors)
+      throw new ApiError(title, response.status, fieldErrors, problem?.code)
     }
     throw new ApiError(response.statusText || 'Request failed', response.status)
   }
