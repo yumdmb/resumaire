@@ -1,3 +1,5 @@
+![Resumaire — your job search workspace. Track applications. Tailor resumes. Stay honest.](assets/readme-banner.svg)
+
 # Resumaire
 
 Resumaire is a split application:
