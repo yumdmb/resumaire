@@ -56,12 +56,9 @@ VITE_API_BASE_URL=http://localhost:5194
 
 ```powershell
 dotnet user-secrets set --project backend "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=resumaire;Username=postgres;Password=postgres"
-dotnet user-secrets set --project backend "OpenAI:BaseUrl" "https://api.openai.com/v1/"
-dotnet user-secrets set --project backend "OpenAI:Model" "gpt-4o-mini"
-dotnet user-secrets set --project backend "OpenAI:ApiKey" "<your-key>"
 ```
 
-`OpenAI:ApiKey` is only needed once AI features are used. `OpenAI:BaseUrl` may point to another OpenAI-compatible provider if that provider supports the `/responses` endpoint and the structured output request/response shape used by the backend. See [docs/ai-provider-configuration.md](docs/ai-provider-configuration.md) for reasoning models, token limits and per-user rate limits.
+AI credentials are configured by each signed-in user in **Settings → AI**. There is no shared backend API-key fallback. Existing `OpenAI:ApiKey`, `OpenAI:BaseUrl`, and `OpenAI:Model` developer settings are ignored by personal AI connections; remove those old secrets if they are no longer needed. See [Personal AI connections](#personal-ai-connections) below.
 
 ### 3b. Install Typst (PDF export)
 
@@ -189,6 +186,36 @@ dotnet run --project backend
 dotnet test Resumaire.slnx
 dotnet ef database update --project backend --startup-project backend
 ```
+
+## Personal AI connections
+
+Open **Settings → AI**, select OpenAI or OpenCode Zen, enter your provider key, and connect to load models. Choose a supported model, explicitly test it, then save within ten minutes. Testing uses synthetic input and may incur a provider charge. Users pay their provider directly; no Resumaire-owned AI key is used.
+
+The provider catalog is fetched automatically and cached for ten minutes per account and credential version. Only models supported by the Responses/structured-output integration are selectable. Unknown models are displayed as unsupported until their capabilities are added to `backend/Ai/AiProviderRegistry.cs`. A missing or forbidden catalog endpoint offers a curated fallback; a successful selected-model test verifies actual access. Discovery does not prove available credit or future quota.
+
+Saved keys are encrypted and scoped to the authenticated account. The browser receives only their final four characters. Keys are never persisted in browser storage. Replacing a key requires a new test; removing it disables future AI calls while preserving manual tailoring. Contributor models disclose training use and require explicit acknowledgement before testing or saving. In-flight calls may complete after a key is removed; revoke a credential at the provider if it must stop working immediately.
+
+Both tests and tailoring count against durable per-user limits: five attempts per UTC minute and fifty per UTC day by default. Failed/cancelled attempts count because providers can still charge them. One provider request per user can run at a time; an abandoned lease expires after 150 seconds. Limits survive restarts and credential replacement/removal. The separate short-term settings throttle permits twenty requests/minute per instance. There are no automatic paid retries.
+
+Optional backend tuning: `OpenAI__MaxOutputTokens` (1000–16000, default 4000), `OpenAI__TimeoutSeconds` (5–120, default 60), `AiTailoring__RequestsPerMinute`, and `AiTailoring__RequestsPerDay`. Provider address, key and model come from the user's trusted connection, and temperature is omitted for model portability.
+
+Structured contact fields, personal links, project URLs and certification identifiers are excluded from AI inputs. Professional resume text and job descriptions still go to the chosen provider, including anything users put into free-text fields. Requests set `store:false`; that does not override provider retention/training policies. Usage records contain operation, provider/model, result, duration and available token counts, not prompts or keys.
+
+Authenticated settings API (standard `{ data, message }` response envelope):
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/settings/ai/` | Masked account connection and supported providers |
+| `POST /api/settings/ai/models` | Discover models; body includes `providerId`, optional draft `apiKey`, and `refresh` |
+| `POST /api/settings/ai/test` | Synthetic selected-model test; adds `modelId` and `trainingAcknowledged` when needed |
+| `PUT /api/settings/ai/` | Save the tested selection; adds `validationToken` and current `expectedVersion` |
+| `DELETE /api/settings/ai/key` | Remove the current account's connection |
+
+An omitted draft key reuses the saved key only for the same provider. Test receipts bind the user, key fingerprint, provider and model. Settings responses use `Cache-Control: no-store`; errors include a safe `code` for actionable UI states.
+
+## Hosting
+
+See [deployment instructions](deploy/README.md) for the HTTPS frontend, .NET/Typst backend, PostgreSQL, migrations, protected persistent encryption keys, and backup/restore. Production frontend builds use the same-origin API by default; only set `VITE_API_BASE_URL` when deliberately hosting the API separately.
 
 ## Troubleshooting
 

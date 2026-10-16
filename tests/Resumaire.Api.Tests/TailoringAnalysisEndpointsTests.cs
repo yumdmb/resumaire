@@ -12,6 +12,7 @@ using Resumaire.Api.Data;
 using Resumaire.Api.Data.Entities;
 using Resumaire.Api.Tests.Infrastructure;
 using Resumaire.Api.Tailoring;
+using Resumaire.Api.Ai;
 
 namespace Resumaire.Api.Tests;
 
@@ -303,20 +304,23 @@ public sealed class TailoringAnalysisEndpointsTests
     }
 
     [Fact]
-    public async Task GenerateSuggestions_WhenNotConfigured_ReturnsServiceUnavailable()
+    public async Task GenerateSuggestions_WithoutPersonalKey_ReturnsSettingsAction()
     {
         await using var factory = await CreateMigratedFactoryAsync();
         await ResetDatabaseAsync(factory);
         var baseResumeId = await SeedBaseResumeAsync(factory, OwnerUserId);
         var jobId = await SeedJobAsync(factory, OwnerUserId, baseResumeId);
-        using var appFactory = WithThrowingAiGenerator(factory, new AiTailoringUnavailableException("OpenAI:ApiKey is not configured."));
+        await using (var scope = factory.Services.CreateAsyncScope())
+            await scope.ServiceProvider.GetRequiredService<ApplicationDbContext>().UserAiSettings.ExecuteDeleteAsync();
+        using var appFactory = WithFakeAiGenerator(factory, ReplaceBulletResult());
 
         var client = appFactory.CreateClient();
         client.DefaultRequestHeaders.Add(TestAuthHandler.UserIdHeaderName, OwnerUserId);
 
         var response = await client.PostAsync($"/api/jobs/{jobId}/tailoring/suggestions", content: null);
 
-        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Equal("ai_settings_required", (await ReadJsonAsync(response)).GetProperty("code").GetString());
     }
 
     [Fact]
@@ -339,7 +343,7 @@ public sealed class TailoringAnalysisEndpointsTests
 
         Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
         Assert.Equal(
-            "Too many AI suggestion requests",
+            "AI connection",
             (await ReadJsonAsync(limited)).GetProperty("title").GetString());
 
         // Other endpoints are unaffected.
@@ -541,6 +545,12 @@ public sealed class TailoringAnalysisEndpointsTests
                 Email = $"{userId}@example.test",
                 NormalizedEmail = $"{userId}@example.test".ToUpperInvariant(),
                 EmailConfirmed = true
+            });
+            dbContext.UserAiSettings.Add(new UserAiSettings
+            {
+                UserId = userId, ProviderId = "openai", ModelId = "gpt-4o-mini", KeyLastFour = "-key",
+                EncryptedApiKey = scope.ServiceProvider.GetRequiredService<AiCredentialProtector>().Protect(userId, "test-key"),
+                CreatedAt = DateTimeOffset.UtcNow, UpdatedAt = DateTimeOffset.UtcNow, LastValidatedAt = DateTimeOffset.UtcNow
             });
         }
 

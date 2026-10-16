@@ -1,0 +1,12 @@
+.ai-settings-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6); display: grid; gap: var(--space-5); }
+.ai-settings-intro h2 { margin: 0 0 var(--space-2); font-size: 1.15rem; }
+.ai-settings-intro p, .ai-settings-disclosure, .ai-settings-footer, .ai-settings-privacy { color: var(--text-secondary); line-height: 1.65; font-size: .9rem; }
+.ai-connection-status { padding: var(--space-3); background: var(--surface-sunken); border-radius: var(--radius-sm); overflow-wrap: anywhere; }
+.ai-settings-actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.ai-settings-success { color: var(--success); }
+.ai-settings-notice { padding: var(--space-3); color: var(--warning); border: 1px solid var(--border); border-radius: var(--radius-sm); line-height: 1.6; }
+.ai-training-acknowledgement { display: flex; align-items: flex-start; gap: var(--space-3); line-height: 1.6; }
+.ai-training-acknowledgement input { margin-top: 5px; }
+.ai-settings-remove { border-top: 1px solid var(--border); padding-top: var(--space-5); }
+.ai-settings-footer { margin-top: var(--space-5); }
+@media (max-width: 540px) { .ai-settings-card { padding: var(--space-4); } .ai-settings-actions .btn { flex: 1 1 auto; } }

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" role="img" aria-labelledby="title">
+  <title id="title">Resumaire folded R</title>
+  <style>
+    :root { color: oklch(55% 0.17 40); }
+    @media (prefers-color-scheme: dark) {
+      :root { color: oklch(68% 0.16 42); }
+    }
+  </style>
+  <g id="resumaire-mark" fill="currentColor">
+    <path fill-rule="evenodd" d="M8 8h26v14h14v3c0 8.2-4.4 12.8-12.4 14.9L54 56H40L25.6 41H22v9h6v6H8v-6h5V14H8V8Zm14 10v14h9c5.8 0 9-2.3 9-7v-1h-8v-6H22Z" />
+    <path d="m37 8 14 11H37V8Z" />
+  </g>
+</svg>

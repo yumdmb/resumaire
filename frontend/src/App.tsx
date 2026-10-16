@@ -1,5 +1,6 @@
 import { NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { BrandMark } from './components/ui/BrandMark'
 import { ThemeToggle } from './components/ui/ThemeToggle'
 import { useAuth } from './lib/auth'
 import { DashboardPage } from './pages/DashboardPage'
@@ -11,6 +12,7 @@ import { RegisterPage } from './pages/RegisterPage'
 import { ResumeBuilderPage } from './pages/ResumeBuilderPage'
 import { ResumePreviewPage } from './pages/ResumePreviewPage'
 import { TailoringPage } from './pages/TailoringPage'
+import { AiSettingsPage } from './pages/AiSettingsPage'
 
 const nav = [
   {
@@ -44,6 +46,18 @@ const nav = [
       </svg>
     ),
   },
+  {
+    to: '/settings/ai',
+    label: 'Settings',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M3 4h10M3 8h10M3 12h10" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+        <circle cx="6" cy="4" r="1.5" fill="var(--surface)" stroke="currentColor" />
+        <circle cx="10" cy="8" r="1.5" fill="var(--surface)" stroke="currentColor" />
+        <circle cx="6" cy="12" r="1.5" fill="var(--surface)" stroke="currentColor" />
+      </svg>
+    ),
+  },
 ]
 
 function AppShell() {
@@ -54,7 +68,7 @@ function AppShell() {
       <aside className="rail">
         <div className="rail-brand" aria-label="Resumaire">
           <span className="rail-mark" aria-hidden="true">
-            R
+            <BrandMark size={32} />
           </span>
           <span className="rail-wordmark">Resumaire</span>
         </div>
@@ -96,6 +110,7 @@ function AppShell() {
           <Route path="resume/preview" element={<ResumePreviewPage />} />
           <Route path="resume/preview/:tailoredResumeId" element={<ResumePreviewPage />} />
           <Route path="tailor" element={<TailoringPage />} />
+          <Route path="settings/ai" element={<AiSettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

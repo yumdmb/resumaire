@@ -1,10 +1,10 @@
 import { Page } from '../components/ui/Page'
 import { useRef, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { Button } from '../components/ui/Button'
 import { PageHeader } from '../components/ui/PageHeader'
 import { Stepper } from '../components/ui/Stepper'
-import { resumeApi, tailoringApi } from '../lib/api'
+import { ApiError, resumeApi, tailoringApi } from '../lib/api'
 import { emptyResumeContent, type ResumeContent } from '../lib/types'
 import {
   AiReviewPanel,
@@ -20,6 +20,7 @@ export function TailoringPage() {
   const navigate = useNavigate()
   const [workflow, setWorkflow] = useState<WorkflowStep>({ step: 'select-job' })
   const [error, setError] = useState<string | null>(null)
+  const [connectionError, setConnectionError] = useState(false)
   const [busyLabel, setBusyLabel] = useState('Analyzing job…')
   const [isSaving, setIsSaving] = useState(false)
   const [canCancel, setCanCancel] = useState(false)
@@ -29,6 +30,7 @@ export function TailoringPage() {
 
   async function handleStartAi(jobId: string) {
     setError(null)
+    setConnectionError(false)
     setBusyLabel('Generating suggestions. This can take up to a minute…')
     setWorkflow({ step: 'analyzing', jobId })
     const controller = new AbortController()
@@ -51,6 +53,8 @@ export function TailoringPage() {
       // Cancelling is a choice, not a failure.
       if (!controller.signal.aborted) {
         setError(err instanceof Error ? err.message : 'Could not start tailoring')
+        setConnectionError(err instanceof ApiError && ['ai_settings_required', 'credential_unreadable', 'invalid_api_key',
+          'provider_permission', 'model_unavailable', 'unsupported_model', 'training_acknowledgement_required'].includes(err.code ?? ''))
       }
       setWorkflow({ step: 'select-job' })
     } finally {
@@ -65,6 +69,7 @@ export function TailoringPage() {
 
   async function handleStartManual(jobId: string) {
     setError(null)
+    setConnectionError(false)
     setBusyLabel('Loading your resume…')
     setWorkflow({ step: 'analyzing', jobId })
     try {
@@ -124,6 +129,7 @@ export function TailoringPage() {
 
   function handleReset() {
     setError(null)
+    setConnectionError(false)
     setWorkflow({ step: 'select-job' })
   }
 
@@ -205,6 +211,7 @@ export function TailoringPage() {
       {error && (
         <div className="form-alert" role="alert" style={{ marginBottom: 16 }}>
           {error}
+          {connectionError && <p><Link to="/settings/ai">Open AI settings</Link></p>}
         </div>
       )}
       <JobSelector
